@@ -1,0 +1,5 @@
+#ifndef BEAR_VERSION
+#define BEAR_VERSION 0.0.9
+#define BEAR_GIT_DATE "Sun Jan 1 00:00:00 0"
+#endif
+

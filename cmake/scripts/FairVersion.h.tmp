@@ -1,0 +1,5 @@
+#ifndef BEAR_VERSION
+#define BEAR_VERSION @BEAR_GIT_VERSION@
+#define BEAR_GIT_DATE "@BEAR_GIT_DATE@"
+#endif
+
