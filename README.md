@@ -10,16 +10,16 @@ BEAR  is distributed under the terms of the GNU Lesser General Public Licence ve
 
 #### 1. Build Requirements
 
-    cmake >= 2.8.3
+cmake >= 2.8.3
 
-    C++11 Compiler:
+C++11 Compiler:
 
-    * GCC >= 4.6
-    * clang >= 3.2
+* GCC >= 4.6
+* clang >= 3.2
 
-    Third party libraries:
-    * Boost>=1.41 (required)
-    * Root>=5.32 (optional)
+Third party libraries:
+* Boost>=1.41 (required)
+* Root>=5.32 (optional)
 
 #### 2. Install [BEAR](https://github.com/NicolasWinckler/BEAR)
 
