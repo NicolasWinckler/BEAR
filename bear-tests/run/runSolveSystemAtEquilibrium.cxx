@@ -17,7 +17,7 @@ typedef equations_manager<double,equations_d,solve_method_d> bear_manager;
 int main(int argc, char** argv) 
 {
     bear_manager man;
-    man.use_cfgFile();
+    //man.use_cfgFile();
     if(man.parse(argc, argv,true))
         return 1;
     

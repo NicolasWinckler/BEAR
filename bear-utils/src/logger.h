@@ -35,7 +35,6 @@ namespace bear
             INFO,
             WARN,
             ERROR,
-            STATE,
             NOLOG
         };
 

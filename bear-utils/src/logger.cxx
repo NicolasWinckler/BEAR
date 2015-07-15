@@ -41,6 +41,7 @@ namespace bear
         fLogLevel = type;
         switch (type)
         {
+            
             case DEBUG :
                 type_str = "\033[01;34mDEBUG\033[0m";
                 break;
@@ -57,9 +58,9 @@ namespace bear
                 type_str = "\033[01;31mERROR\033[0m";
                 break;    
 
-            case STATE :
-                type_str = "\033[01;35mSTATE\033[0m";
-                break;
+            //case STATE :
+            //    type_str = "\033[01;35mSTATE\033[0m";
+            //    break;
 
             case NOLOG :
                 type_str = "\033[01;31mNOLOG\033[0m";

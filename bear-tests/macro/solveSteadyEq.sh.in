@@ -1,0 +1,7 @@
+#!/bin/bash
+
+
+SOLVE_EQ="runSolveSteadyEq"
+SOLVE_EQ+=" --config @CMAKE_SOURCE_DIR@/data/config/bear-config-steady.cfg"
+#SOLVE_EQ+=" --exec plot"
+@CMAKE_BINARY_DIR@/bin/$SOLVE_EQ

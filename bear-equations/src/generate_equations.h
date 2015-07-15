@@ -9,7 +9,7 @@
 #define	GENERATEEQUATIONS_H
 
 #include <string>
-
+#include "logger.h"
 namespace bear
 {
 
@@ -36,10 +36,18 @@ namespace bear
 
         int init()
         {
-            if(read())
+            try
+            {
+                if(read())
+                    return 1;
+                if(generate())
+                    return 1;
+            }
+            catch(std::exception& e)
+            {
+                LOG(ERROR) << e.what();
                 return 1;
-            if(generate())
-                return 1;
+            }
             return 0;
         }
 

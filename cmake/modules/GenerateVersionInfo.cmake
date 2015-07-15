@@ -11,7 +11,7 @@
  Find_Package(Git)
 
  If(GIT_FOUND AND EXISTS "${SOURCE_DIR}/.git")
-   Execute_Process(COMMAND ${GIT_EXECUTABLE} describe
+   Execute_Process(COMMAND ${GIT_EXECUTABLE} describe --always
                    OUTPUT_VARIABLE BEAR_GIT_VERSION
                    OUTPUT_STRIP_TRAILING_WHITESPACE
                    WORKING_DIRECTORY ${SOURCE_DIR}
@@ -21,7 +21,7 @@
                    OUTPUT_STRIP_TRAILING_WHITESPACE
                    WORKING_DIRECTORY ${SOURCE_DIR}
                   )
-   Message(STATUS "FairRoot Version - ${BEAR_GIT_VERSION} from - ${BEAR_GIT_DATE}")
+   Message(STATUS "BEAR Version - ${BEAR_GIT_VERSION} from - ${BEAR_GIT_DATE}")
    if(BEAR)
      Configure_File(${BEAR}/scripts/FairVersion.h.tmp ${BINARY_DIR}/FairVersion.h @ONLY)
    else(BEAR)  

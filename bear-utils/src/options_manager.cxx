@@ -28,8 +28,8 @@ namespace bear
                             fEnvironmentDesc("Environment Variables"),
                             fCmdline_options("Command line options"), 
                             fConfig_file_options("Configuration file options"), 
-                            fVisible_options("Visible options"),
-                            fVerboseLvl(0), fuse_cfgFile(false), fConfigFile()
+                            fVisible_options("User options"),
+                            fVerboseLvl(0), fUse_cfgFile(false), fConfig_file_path()
     {
         // //////////////////////////////////
         // define generic options
@@ -67,7 +67,7 @@ namespace bear
     int options_manager::addTo_cfgFile(const options_description& optdesc, bool visible)
     {
         //if use_cfgFile() not yet called, then enable it with required file name to be provided by command line
-        if(!fuse_cfgFile)
+        if(!fUse_cfgFile)
             use_cfgFile();
 
         fConfig_file_options.add(optdesc);
@@ -85,16 +85,16 @@ namespace bear
 
     void options_manager::use_cfgFile(const std::string& filename)
     {
-            fuse_cfgFile = true;
+            fUse_cfgFile = true;
             if (filename.empty())
             {
                 fConfigDesc.add_options()
-                    ("config,c", po::value<file_path>(&fConfigFile)->required(), "Path to configuration file (required argument)");
+                    ("config,c", po::value<path>(&fConfig_file_path)->required(), "Path to configuration file (required argument)");
                 addTo_cmdLine(fConfigDesc);
             }
             else
             {
-                fConfigFile = filename;
+                fConfig_file_path = filename;
             }
     }
 
@@ -103,26 +103,34 @@ namespace bear
 
     int options_manager::parse_cmdLine(const int argc, char** argv, const options_description& desc, variables_map& varmap, bool AllowUnregistered)
     {
-        // //////////////////////////////////
-        // get options from cmd line and store in variable map
-        // here we use command_line_parser instead of parse_command_line, to allow unregistered and positional options
-        if(AllowUnregistered)
+        try
         {
-            po::command_line_parser parser{argc, argv};
-            parser.options(desc).allow_unregistered();
-            po::parsed_options parsedOptions = parser.run();
-            po::store(parsedOptions,varmap);
+            // //////////////////////////////////
+            // get options from cmd line and store in variable map
+            // here we use command_line_parser instead of parse_command_line, to allow unregistered and positional options
+            if(AllowUnregistered)
+            {
+                po::command_line_parser parser{argc, argv};
+                parser.options(desc).allow_unregistered();
+                po::parsed_options parsedOptions = parser.run();
+                po::store(parsedOptions,varmap);
+            }
+            else
+                po::store(po::parse_command_line(argc, argv, desc), varmap);
+
+            // //////////////////////////////////
+            // call the virtual notifySwitch_options method to handle switch options like e.g. "--help" or "--version"
+            // return 1 if switch options found in varmap
+            if(notifySwitch_options())
+                return 1;
+
+            po::notify(varmap);
         }
-        else
-            po::store(po::parse_command_line(argc, argv, desc), varmap);
-
-        // //////////////////////////////////
-        // call the virtual notifySwitch_options method to handle switch options like e.g. "--help" or "--version"
-        // return 1 if switch options found in varmap
-        if(notifySwitch_options())
+        catch(std::exception& e)
+        {
+            LOG(ERROR) << e.what();
             return 1;
-
-        po::notify(varmap);
+        }
         return 0;
     }
 
@@ -136,32 +144,55 @@ namespace bear
 
     int options_manager::parse_cfgFile(std::ifstream& ifs, const options_description& desc, variables_map& varmap, bool AllowUnregistered)
     {
-        if (!ifs)
+        try
         {
-            std::cout << "can not open configuration file \n";
-            return -1;
+            if (!ifs)
+            {
+                LOG(ERROR) << "can not open configuration file \n";
+                return -1;
+            }
+            else
+            {
+                po:store(parse_config_file(ifs, desc, AllowUnregistered), varmap);
+                po::notify(varmap);
+            }
         }
-        else
+        catch(std::exception& e)
         {
-            po:store(parse_config_file(ifs, desc, AllowUnregistered), varmap);
-            po::notify(varmap);
+            LOG(ERROR) << e.what();
+            return 1;
         }
         return 0;
     }
 
     int options_manager::parse_cfgFile(const std::string& filename, const options_description& desc, variables_map& varmap, bool AllowUnregistered)
     {
-        std::ifstream ifs(filename.c_str());
-        if (!ifs)
+        try
         {
-            std::cout << "can not open configuration file: " << filename << "\n";
-            return -1;
+            if (!fs::exists(filename))
+            {
+                LOG(ERROR)<<"file '"<< filename <<"' not found";
+                return 1;
+            }
+
+            std::ifstream ifs(filename.c_str());
+            if (!ifs)
+            {
+                LOG(ERROR) << "can not open file: " << filename <<"'";
+                return 1;
+            }
+            else
+            {
+                po:store(parse_config_file(ifs, desc, AllowUnregistered), varmap);
+                po::notify(varmap);
+            }
         }
-        else
+        catch(std::exception& e)
         {
-            po:store(parse_config_file(ifs, desc, AllowUnregistered), varmap);
-            po::notify(varmap);
+            LOG(ERROR) << e.what();
+            return 1;
         }
+        
         return 0;
     }
 
@@ -280,7 +311,7 @@ namespace bear
         // Method to overload.
         // -> loop over variable map and print its content
         // -> In this example the following types are supported:
-        // std::string, int, float, double, file_path
+        // std::string, int, float, double, path
         // std::vector<std::string>, std::vector<int>, std::vector<float>, std::vector<double>
 
 
@@ -467,12 +498,12 @@ namespace bear
                 return std::make_tuple(val_str,std::string("  [Type=vector<double>]"),defaulted_val,empty_val);
             }
 
-            // file_path
-            if(auto q = boost::any_cast<file_path>(&value))
+            // path
+            if(auto q = boost::any_cast<path>(&value))
             {
                 std::string val_str = (*q).string();
                 //std::string val_str = (*q).filename().generic_string();
-                return std::make_tuple(val_str,std::string("  [Type=file_path]"),defaulted_val,empty_val);
+                return std::make_tuple(val_str,std::string("  [Type=path]"),defaulted_val,empty_val);
             }
 
             // if we get here, the type is not supported return unknown info

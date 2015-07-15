@@ -10,7 +10,7 @@ BEAR  is distributed under the terms of the GNU Lesser General Public Licence ve
 
 #### 1. Build Requirements
 
-cmake >= 2.8.3
+cmake >= 2.8.2
 
 C++11 Compiler:
 

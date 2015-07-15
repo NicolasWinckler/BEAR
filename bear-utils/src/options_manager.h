@@ -42,14 +42,15 @@ namespace bear
     }
 
     namespace po = boost::program_options;
-
+    namespace fs = boost::filesystem;
     class options_manager
     {
-        typedef boost::program_options::options_description     options_description;
-        typedef boost::program_options::variables_map                 variables_map;
-        typedef boost::program_options::variable_value               variable_value;
-        typedef boost::filesystem::path                                   file_path;
+        typedef po::options_description                         options_description;
+        typedef po::variables_map                                     variables_map;
+        typedef po::variable_value                                   variable_value;
+        typedef fs::path                                                       path;
     public:
+        enum class source {cmd, cfg, file, env};
         options_manager();
         virtual ~options_manager();
 
@@ -58,6 +59,7 @@ namespace bear
         int addTo_cfgFile(const options_description& optdesc, bool visible = true);
         int addTo_env(const options_description& optdesc);
 
+        int add_to();
         void use_cfgFile(const std::string& filename = "");
 
         // get value corresponding to the key
@@ -98,7 +100,7 @@ namespace bear
 
         int parse_environment(const std::function<std::string(std::string)>&);
 
-        virtual int parse(const int argc, char** argv, bool AllowUnregistered = false) {return 0;}
+        virtual int parse(const int argc, char** argv, bool AllowUnregistered = false) = 0 ;
 
         virtual int print_options();
         int print_help() const;
@@ -121,8 +123,8 @@ namespace bear
         options_description fVisible_options;
 
         int fVerboseLvl;
-        bool fuse_cfgFile;
-        file_path fConfigFile;
+        bool fUse_cfgFile;
+        path fConfig_file_path;
         virtual int notifySwitch_options();
 
         // update_varMap() and replace() --> helper functions to modify the value of variable map after calling po::store
