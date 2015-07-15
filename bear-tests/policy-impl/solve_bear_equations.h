@@ -33,10 +33,25 @@ namespace bear
         virtual ~solve_bear_equations(){}
         int solve(const matrix& mat)
         {
-            fMat=mat;
-            
-            InvertMatrix<matrix>(fMat,fMat_inv);
-            
+            try
+            {
+                fMat=mat;
+                
+                // deal only with square matrices
+                if(fMat.size1()==fMat.size2())
+                    fMat_inv.resize(fMat.size1(), fMat.size2());
+                else
+                {
+                    LOG(ERROR)<<"input matrix is not a square matrix (dim1 = "<< fMat.size1() <<", dim2 = "<< fMat.size2() <<").";
+                    return 1;
+                }
+                InvertMatrix<matrix>(fMat,fMat_inv);
+            }
+            catch(std::exception& e)
+            {
+                LOG(ERROR)<< "could not solve system. Reason : " <<e.what();
+                return 1;
+            }
             return 0;
         }
     private:

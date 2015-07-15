@@ -160,8 +160,8 @@ namespace bear
                 for(int j(0); j<dim; j++)
                 {
                     std::string key=form_coef_key(i,j);
-                    if(vm[key].defaulted())
-                        LOG(DEBUG)<<"Defaulted";
+                    if(!vm[key].defaulted())
+                        LOG(DEBUG)<<"provided value : "<< key <<" = "<< vm[key].as<data_type>();
                     if(vm.count(key))
                         fCoef_set(i,j)=vm[key].as<data_type>();
                 }
