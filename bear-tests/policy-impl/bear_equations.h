@@ -39,7 +39,7 @@ namespace bear
         
         using ui_type::parse_cmdLine;
         using ui_type::parse_cfgFile;
-        using ui_type::use_cfgFile;
+        
         using ui_type::fCmdline_options;
         using ui_type::fConfig_file_options;
         using ui_type::fConfig_file_path;
@@ -51,6 +51,7 @@ namespace bear
         
         using ui_type::addTo_cmdLine;
         using ui_type::addTo_cfgFile;
+        using ui_type::use_cfgFile;
         //using ui_type::parse;
         
         
