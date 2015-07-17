@@ -12,6 +12,14 @@ ${CMAKE_SOURCE_DIR}/bear-tests/policy-impl
 
 Set(SYSTEM_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIRS})
 
+if(LAPACK_FOUND AND BNB_FOUND)
+  set(INCLUDE_DIRECTORIES 
+    ${BNB_INCLUDE_DIR}
+    ${INCLUDE_DIRECTORIES}
+  )
+
+endif(LAPACK_FOUND AND BNB_FOUND)
+
 include_directories(${INCLUDE_DIRECTORIES})
 include_directories(${SYSTEM_INCLUDE_DIRECTORIES})
 
@@ -24,3 +32,17 @@ Set(EXE_NAME runSolveSteadyEq)
 Set(SRCS run/runSolveSystemAtEquilibrium.cxx)
 Set(DEPENDENCIES bear_utils blas lapack gfortran)
 GENERATE_EXECUTABLE()
+
+if(LAPACK_FOUND AND BNB_FOUND)
+  Set(EXE_NAME runSolveSteadyEqLapack)
+  Set(SRCS 
+    run/runSolveSystemAtEquilibriumLapack.cxx
+    ${SRC}
+  )
+  #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
+  #set(LIBS_MAP_LAPACK "LAPACK")
+  Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES})
+  GENERATE_EXECUTABLE()
+
+endif(LAPACK_FOUND AND BNB_FOUND)
+

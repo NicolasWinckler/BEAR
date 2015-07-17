@@ -59,7 +59,7 @@ namespace bear
                             ui_type(), 
                             fEqDim(0), 
                             fCoefDim(9),
-                            fCoef_set(), 
+                            fCoef_list(),
                             fMat(),
                             fBear_eq_options("Bear equations program options"),
                             fInput_desc("cross-sections description"),
@@ -154,16 +154,21 @@ namespace bear
             if(ui_type::parse_cfgFile(filename.string(),desc,vm,false))
                 return 1;
             
-            // get vm data into the fCoef_set matrix 
-            fCoef_set.resize(dim,dim,false);
+            // get vm data into the fCoef_list matrix 
+            fCoef_list.clear();
             for(int i(0); i<dim; i++)
                 for(int j(0); j<dim; j++)
                 {
                     std::string key=form_coef_key(i,j);
                     if(!vm[key].defaulted())
-                        LOG(DEBUG)<<"provided value : "<< key <<" = "<< vm[key].as<data_type>();
+                        LOG(DEBUG)<<"provided value : "<< key <<" = "<< vm.at(key).as<data_type>();
+                    
                     if(vm.count(key))
-                        fCoef_set(i,j)=vm[key].as<data_type>();
+                    {
+                        std::pair<int,int> coef_key(i,j);
+                        data_type coef_val=vm.at(key).as<data_type>();
+                        fCoef_list.insert( std::make_pair(coef_key, coef_val) );
+                    }
                 }
             
             
@@ -209,7 +214,7 @@ namespace bear
         {
             data_type val=data_type();
             for(int j(1);j<=i-1;j++)
-                val+=fCoef_set(j,i)*Fpq(j,q);
+                val+=fCoef_list.at(std::pair<int,int>(j,i))*Fpq(j,q);
             return val;
         }
 
@@ -218,7 +223,7 @@ namespace bear
         {
             data_type val=data_type();
             for(int s(i+1);s<=fEqDim;s++)
-                val+=fCoef_set(s,i)*Fpq(s,q);
+                val+=fCoef_list.at(std::pair<int,int>(s,i))*Fpq(s,q);
             return val;
         }
 
@@ -227,9 +232,9 @@ namespace bear
         {
             data_type val=data_type();
             for(int m(i+1);m<=fEqDim-1;m++)
-                val-=fCoef_set(i,m)*Fpq(i,q);
+                val+=fCoef_list.at(std::pair<int,int>(i,m))*Fpq(i,q);
             for(int k(1);k<=i-1;k++)
-                val-=fCoef_set(i,k)*Fpq(i,q);
+                val+=fCoef_list.at(std::pair<int,int>(i,k))*Fpq(i,q);
             return val;
         }
 
@@ -246,7 +251,7 @@ namespace bear
 
         int fEqDim;
         int fCoefDim;
-        matrix fCoef_set;
+        std::map<std::pair<int,int>, data_type> fCoef_list;
         matrix fMat;
         options_description fBear_eq_options;
         options_description fInput_desc;

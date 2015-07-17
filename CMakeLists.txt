@@ -127,6 +127,12 @@ Else (Boost_FOUND)
   Set(Boost_Avail 0)
 EndIf (Boost_FOUND)
 
+
+find_package(LAPACK)
+find_package(BoostNumBinding)
+if(BNB_FOUND)
+
+endif(BNB_FOUND)
 # Set the library version in the main CMakeLists.txt
 SET(BEAR_MAJOR_VERSION 0)
 SET(BEAR_MINOR_VERSION 0)
