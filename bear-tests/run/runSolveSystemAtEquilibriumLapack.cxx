@@ -24,10 +24,17 @@ typedef ublas::matrix<std::complex<double>,ublas::column_major> matrix_c;
 typedef ublas::vector<std::complex<double> >                    vector_c;
 
 /*
- 
+ * Assumptions : the matrix A of the system can be diagonalized in R and eigen values are non-zero.
+ * (recall : assumption satisfied if A real symetric)
+ * 
+ * Then :
+ * 
  * dF/dx = A * F <=> dF/dx = P * D * V      (with V=P^(-1) )
  *               <=> dY/dx = D * Y          (with Y = V * F)
- 
+ *               <=> solution of the form Y = ( c1 exp(-lambda1 * x) , ... , cN exp(-lambdaN * x) )
+ * 
+ * boundary for F(x=0) gives the unknown coefficients : (c1, ..., cN) = V * F(x=0)
+ * 
  */
 
 
