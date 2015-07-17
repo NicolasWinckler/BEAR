@@ -11,7 +11,7 @@
 #include "matrix_diagonalization.h"
 #include "block_translation.h"
 
-
+#include <boost/numeric/ublas/storage.hpp>
 using namespace bear;
 namespace ublas = boost::numeric::ublas;
 namespace lapack = boost::numeric::bindings::lapack; 
@@ -41,6 +41,12 @@ typedef ublas::vector<std::complex<double> >                    vector_c;
 int main(int argc, char** argv) 
 {
     
+
+    ublas::range r (0, 3);
+    for (unsigned i = 0; i < r.size (); ++ i) {
+        std::cout << r (i) << std::endl;
+    }
+
     matrix_d A(3,3);
     matrix_d D(3,3);
     matrix_c P(3,3);
