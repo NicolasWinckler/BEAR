@@ -37,12 +37,9 @@ typedef ublas::vector<std::complex<double> >                    vector_c;
  * 
  */
 
-
 int main(int argc, char** argv) 
 {
-    
-
-    ublas::range r (0, 3);
+    ublas::range r (5, 13);
     for (unsigned i = 0; i < r.size (); ++ i) {
         std::cout << r (i) << std::endl;
     }

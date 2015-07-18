@@ -33,7 +33,7 @@ namespace bear
         {
             DEBUG,
             INFO,
-            WARN,
+            WARNING,
             ERROR,
             NOLOG
         };

@@ -50,7 +50,7 @@ namespace bear
                 type_str = "\033[01;32mINFO\033[0m";
                 break;
 
-            case WARN :
+            case WARNING :
                 type_str = "\033[01;33mWARN\033[0m";
                 break;
 

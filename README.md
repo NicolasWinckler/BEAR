@@ -1,4 +1,4 @@
-#BEAR: Balance Equations for Atomic Reactions 
+#BEAR: Balance Equations for Atomic Reactions (in dev)
 
 ## License 
 BEAR  is distributed under the terms of the GNU Lesser General Public Licence version 3 (LGPL) version 3.
@@ -18,7 +18,8 @@ C++11 Compiler:
 * clang >= 3.2
 
 Third party libraries:
-* Boost>=1.41 (required)
+* boost>=1.41 (required)
+* boost-numeric-bindings and Lapack>=3.5 (required for solving differential systems)
 * Root>=5.32 (optional)
 
 #### 2. Install [BEAR](https://github.com/NicolasWinckler/BEAR)
