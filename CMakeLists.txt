@@ -16,6 +16,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION  2.8.2 FATAL_ERROR)
 foreach(p
   CMP0025 # CMake 3.0
   CMP0042 # CMake 3.0
+  CMP0054
   )
   if(POLICY ${p})
   cmake_policy(SET ${p} NEW)
@@ -164,6 +165,8 @@ ENDIF(HAS_CXX11_SHAREDPOINTER)
 Set(SYSTEM_INCLUDE_DIRECTORIES
     ${Boost_INCLUDE_DIRS}
   )  
+
+add_subdirectory(bear-doc)
 
 If (Boost_FOUND)
     add_subdirectory(bear-utils)

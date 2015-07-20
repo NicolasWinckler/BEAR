@@ -18,7 +18,7 @@ namespace bear
     class generate_equations
     {
     public:
-        generate_equations() : fSymbol("Q"), fSep1("."), fSep2(".") , fSep3("")
+        generate_equations() 
         {}
 
         virtual ~generate_equations()
@@ -50,20 +50,6 @@ namespace bear
             }
             return 0;
         }
-
-        void set_format(const std::string& symbol="Q", const std::string& sep1=".", const std::string& sep2=".", const std::string& sep3=".")
-        {
-            fSymbol=symbol;
-            fSep1=sep1;
-            fSep2=sep2;
-            fSep3=sep3;
-        }
-
-    protected:
-        std::string fSymbol;
-        std::string fSep1;
-        std::string fSep2;
-        std::string fSep3;
     };
 }
 #endif	/* GENERATEEQUATIONS_H */

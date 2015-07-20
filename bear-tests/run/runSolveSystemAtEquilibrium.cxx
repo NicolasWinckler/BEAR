@@ -8,6 +8,7 @@
 #include "equations_manager.h"
 #include "bear_equations.h"
 #include "solve_bear_equations.h"
+#include "bear_user_interface.h"
 
 #include "block_translation.h"
 using namespace bear;
