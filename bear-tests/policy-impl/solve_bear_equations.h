@@ -39,7 +39,10 @@ namespace bear
                 
                 // deal only with square matrices
                 if(fMat.size1()==fMat.size2())
+                {
+                    fMat_inv.clear();
                     fMat_inv.resize(fMat.size1(), fMat.size2());
+                }
                 else
                 {
                     LOG(ERROR)<<"input matrix is not a square matrix (dim1 = "<< fMat.size1() <<", dim2 = "<< fMat.size2() <<").";

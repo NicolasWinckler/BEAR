@@ -10,7 +10,6 @@
 #include "solve_bear_equations.h"
 #include "bear_user_interface.h"
 
-#include "block_translation.h"
 using namespace bear;
 
 typedef bear_equations<double> equations_d;
@@ -18,13 +17,14 @@ typedef solve_bear_equations<double> solve_method_d;
 typedef equations_manager<double,equations_d,solve_method_d> bear_manager;
 int main(int argc, char** argv) 
 {
-    find_corners();
     bear_manager man;
     man.use_cfgFile();
+    LOG(DEBUG)<<"parsing ...";
     if(man.parse(argc, argv,true))
         return 1;
-    
+    LOG(DEBUG)<<"initializing ...";
     man.init();
+    LOG(DEBUG)<<"running ...";
     man.run();
     
     return 0;

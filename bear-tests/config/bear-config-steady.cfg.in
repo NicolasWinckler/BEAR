@@ -1,3 +1,17 @@
+#######################################
+# system of equations options
+
+eq-dim              =   15
+
+#######################################
+# input options
+
+input-file = @CMAKE_SOURCE_DIR@/data/input/test-example.txt
+
+#######################################
+# output options
+
+output-directory    =   @CMAKE_SOURCE_DIR@/data/output
 
 #######################################
 # cross-sections options
@@ -7,23 +21,10 @@ coef-dim            =   30
 # range of cross-sections index Qij
 [coef.index]
 
-i.min               =   0
-i.max               =   20
+i.min               =   1
+i.max               =   17
 
-j.min               =   0
-j.max               =   20
+j.min               =   1
+j.max               =   17
 
-#######################################
-# system of equations options
 
-eq-dim              =   15
-
-#######################################
-# input options
-
-input-file          =   @CMAKE_SOURCE_DIR@/data/input/test-example.txt
-
-#######################################
-# output options
-
-output-directory    =   @CMAKE_SOURCE_DIR@/data/output

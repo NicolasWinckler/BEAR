@@ -38,38 +38,38 @@ namespace bear
     std::ostringstream& logger::Log(int type)
     {
         std::string type_str;
+        
         fLogLevel = type;
         switch (type)
         {
+            case MAXDEBUG :
+                type_str = write_in<color::FG_CYAN>("MAXDEBUG");
+                break;
             
             case DEBUG :
-                type_str = "\033[01;34mDEBUG\033[0m";
+                type_str = write_in<color::FG_BLUE>("DEBUG");
                 break;
 
             case INFO :
-                type_str = "\033[01;32mINFO\033[0m";
+                type_str = write_in<color::FG_GREEN>("INFO");
                 break;
 
             case WARNING :
-                type_str = "\033[01;33mWARN\033[0m";
+                type_str = write_in<color::FG_YELLOW>("WARNING");
                 break;
 
             case ERROR :
-                type_str = "\033[01;31mERROR\033[0m";
+                type_str = write_in<color::FG_RED>("ERROR");
                 break;    
-
-            //case STATE :
-            //    type_str = "\033[01;35mSTATE\033[0m";
-            //    break;
-
+                
             case NOLOG :
-                type_str = "\033[01;31mNOLOG\033[0m";
+                type_str = write_in<color::FG_DEFAULT>("NOLOG");
                 break;
-
+            
             default:
                 break;
         }
-
+        
         timestamp_t tm = get_timestamp();
         timestamp_t ms = tm / 1000.0L;
         timestamp_t s = ms / 1000.0L;
@@ -78,10 +78,9 @@ namespace bear
         char mbstr[100];
         strftime(mbstr, 100, "%H:%M:%S", localtime(&t));
 
-        os << "[\033[01;36m" << mbstr << "\033[0m]"
-           << "[" << type_str << "]"
-           << " ";
-
+        os << "[" << write_in<color::FG_CYAN>(mbstr) << "]"
+           << "[" << type_str << "] ";
+        
         return os;
     }
 
