@@ -1,24 +1,30 @@
 /* 
- * File:   runSolveSystemAtEquilibrium.cxx
+ * File:   runSolveDynEqRoot_RK.cxx
  * Author: winckler
  *
- * Created on July 14, 2015, 11:18 AM
+ * Created on August 11, 2015, 2:10 PM
  */
 
 #include "equations_manager.h"
 #include "bear_equations.h"
-#include "solve_bear_equations.h"
+#include "solve_bear_equations_RK.h"
 #include "bear_user_interface.h"
+#include "bear_gui_root.h"
+
+#include "TApplication.h"
 
 using namespace bear;
 
 typedef bear_equations<double> equations_d;
-typedef solve_bear_equations<double> solve_method_d;
-typedef equations_manager<double,equations_d,solve_method_d> bear_manager;
+typedef solve_bear_equations_RK<double> solve_method_d;
+typedef equations_manager<double,equations_d,solve_method_d,bear_gui_root> bear_manager;
+
+
 int main(int argc, char** argv) 
 {
     try
     {
+        TApplication app("App", nullptr, 0);
         bear_manager man;
         man.use_cfgFile();
         
@@ -39,6 +45,13 @@ int main(int argc, char** argv)
         if(man.save()) 
             return 1;
         
+        
+        
+        LOG(INFO)<<"plotting ...";
+        if(man.plot()) 
+            return 1;
+        
+        app.Run();
         
     }
     catch(std::exception& e)

@@ -20,6 +20,18 @@ namespace bear
         typedef po::options_description                        options_description;
         typedef po::variables_map                                    variables_map;
         typedef fs::path                                                      path;
+        
+        
+        
+    protected:
+        const double N_Avogadro = 6.022140857e+23;
+        std::map<std::string, double> thickness_scale;
+        std::map<std::string, double> cross_section_scale;
+        //6.022140857(74)×1023 mol−1
+        //2.73159734(12)×1026 (lb-mol)−1
+        //1.707248434(77)×1025 (oz-mol)−1
+        
+        
      public:
 
         bear_user_interface() : options_manager(), 
@@ -30,9 +42,37 @@ namespace bear
                                 fBear_eq_options("Bear equations program options"),
                                 fInput_desc("cross-sections description"),
                                 fInfile_cmd_desc("input file options"),
-                                fInfile_cfg_desc("input file options")
+                                fInfile_cfg_desc("input file options"),
+                                fVarmap_input_file(), thickness_scale(), cross_section_scale()
         {
-
+            
+            thickness_scale["fg/cm2"]  = 1.e-15;      // femto
+            thickness_scale["pg/cm2"]  = 1.e-12;      // pico
+            thickness_scale["ng/cm2"]  = 1.e-9;       // nano
+            thickness_scale["mug/cm2"] = 1.e-6;       // micro
+            thickness_scale["mg/cm2"]  = 1.e-3;       // milli
+            thickness_scale["cg/cm2"]  = 1.e-2;       // centi
+            
+            thickness_scale["g/cm2"] = 1.;            // no prefix
+            
+            thickness_scale["kg/cm2"] = 1.e+3;        // kilo
+            thickness_scale["Mg/cm2"] = 1.e+6;        // Mega
+            thickness_scale["Gg/cm2"] = 1.e+9;        // Giga
+            thickness_scale["Tg/cm2"] = 1.e+12;       // Tera
+            thickness_scale["Pg/cm2"] = 1.e+15;       // Peta
+            
+            
+            cross_section_scale["cm2"]  = 1.;
+            cross_section_scale["1e-16 cm2"]  = 1.e-16;
+            cross_section_scale["pb"]   = 1.e-36;
+            cross_section_scale["nb"]   = 1.e-33;
+            cross_section_scale["mub"]  = 1.e-30;
+            cross_section_scale["mb"]   = 1.e-27;
+            cross_section_scale["b"]    = 1.e-24;
+            cross_section_scale["kb"]   = 1.e-21;
+            cross_section_scale["Mb"]   = 1.e-18;
+            cross_section_scale["Gb"]   = 1.e-15;
+            cross_section_scale["Tb"]   = 1.e-12;
         }
 
         virtual ~bear_user_interface(){}
@@ -76,6 +116,7 @@ namespace bear
         fSep3=sep3;
     }
         
+    
         
     protected:
         std::string fSymbol;
@@ -86,7 +127,7 @@ namespace bear
         options_description fInput_desc;
         options_description fInfile_cmd_desc;
         options_description fInfile_cfg_desc;
-        
+        variables_map fVarmap_input_file;
         
         void init_options_descriptions()
         {
@@ -113,6 +154,8 @@ namespace bear
                 ("output-directory", po::value<path>()->default_value(fs::current_path()),      "path to the output file directory : \n"
                                                             "it will write the solutions of the equation system with provided input file name as suffix")
             ;
+            
+            //init_initial_condition_descriptions(fBear_eq_options);
             
             addTo_cmdLine(fGenericDesc);
             addTo_cmdLine(fInfile_cmd_desc);
@@ -149,12 +192,61 @@ namespace bear
             return 0;
         }
         
-    
-
+     
+        
+        
+        int init_input_header_descriptions(options_description& desc)
+        {
+            
+            desc.add_options()
+                ("projectile.symbol",           po::value<std::string>()->default_value("unknown projectile"),              "Symbol of projectile (e.g. U for Uranium...)")
+                ("projectile.energy",           po::value<std::string>()->default_value("unknown energy"),                  "Energy of the projectile")
+                ("target.symbol",               po::value<std::string>()->default_value("unknown target"),                  "Symbol of the target (e.g. C for carbon...)")
+                ("target.mass.number",          po::value<double>()->default_value(0.),                                     "Mass number A of the target")
+                ("target.pressure",             po::value<std::string>()->default_value("unknown target mass unmber"),      "Mass number A of the target")
+                ("cross.section.unit",          po::value<std::string>()->default_value("unknown cross-section unit"),      "Units symbol of cross-sections (e.g. cm2, mm2...)")
+                ("thickness.unit",              po::value<std::string>()->default_value("unknown thickness unit"),          "Units of the thickness (e.g. mg/cm2)")
+                ("thickness.maximum",           po::value<double>()->default_value(20.),                                    "Maximal thickness")
+                ("thickness.minimum",           po::value<double>()->default_value(0.),                                     "Minimum thickness")
+                ("thickness.point.number",      po::value<std::size_t>()->default_value(1000),                              "Maximal thickness")
+                ("fraction.maximum",            po::value<double>()->default_value(1.1),                                    "Maximal fraction range (for plot)")
+                ("fraction.minimum",            po::value<double>()->default_value(0.),                                     "Minimum fraction range (for plot)")
+                
+                    ;
+            return 0;
+        }
+        
+        
+        // note : there is no dimension consistency check (TODO)
+        int init_initial_condition_descriptions(options_description& desc, size_t i_min, size_t i_max)
+        {
+            
+            for(size_t i(i_min); i<i_max; i++)
+            {
+                //std::string key=form_coef_key(i,j);
+                std::string desc_str("Initial conditions ");
+                desc_str+=std::to_string(i);
+                
+                std::string key("F0");
+                key+=fSep1;
+                key+=std::to_string(i);
+                key+=fSep3;
+                
+                if(i==i_min)
+                    desc.add_options()
+                        (key.c_str(), po::value<double>()->default_value(1.), desc_str.c_str());
+                else
+                    desc.add_options()
+                        (key.c_str(), po::value<double>()->default_value(0.), desc_str.c_str());
+            }
+            
+            return 0;
+        }
     
         inline std::string form_coef_key(size_t i, size_t j)
         {
-            std::string key=fSymbol+fSep1+std::to_string(i)+fSep2+std::to_string(j);
+            std::string key("cross.section.");
+            key+=fSymbol+fSep1+std::to_string(i)+fSep2+std::to_string(j);
             return key;
         }
     
@@ -177,6 +269,40 @@ namespace bear
             return 0;
         }
     
+        
+        double scale_factor(const variables_map& vm)
+        {
+            // copy var map and get proper header info to form the saling factor
+            fVarmap_input_file=vm;
+
+            double scale_factor;
+            double atomic_mass = fVarmap_input_file.at("target.mass.number").as<double>();
+            std::string x_unit = fVarmap_input_file.at("thickness.unit").as<std::string>();
+            std::string coef_unit = fVarmap_input_file.at("cross.section.unit").as<std::string>();
+
+            if(!thickness_scale.count(x_unit))
+            {
+                std::stringstream errMsg;
+                errMsg <<"Thickness' unit '"<< x_unit <<"' is undefined. Program will now exit";
+                throw std::runtime_error(errMsg.str().c_str());
+            }
+
+            if(!cross_section_scale.count(coef_unit))
+            {
+                std::stringstream errMsg;
+                errMsg <<"cross-section unit '"<< coef_unit <<"' is undefined. Program will now exit";
+                throw std::runtime_error(errMsg.str().c_str());
+            }
+
+            double thickness_scale_factor=thickness_scale.at(x_unit);
+            double cs_scale_factor = cross_section_scale.at(coef_unit);
+            scale_factor = cs_scale_factor*thickness_scale_factor*N_Avogadro/atomic_mass;
+
+            return scale_factor;
+
+        }
+        
+        
     };
 
 

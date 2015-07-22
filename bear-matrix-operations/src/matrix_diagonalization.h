@@ -25,24 +25,12 @@
 #include <boost/numeric/bindings/lapack/geev.hpp>
 
 
-/*
- 
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
-#include <boost/numeric/bindings/lapack/geev.hpp>
-#include <boost/numeric/bindings/traits/vector_traits.hpp>
-#include <boost/numeric/bindings/traits/ublas_matrix.hpp>
-#include <boost/numeric/bindings/traits/ublas_vector2.hpp>
-#include <boost/numeric/bindings/traits/c_array.hpp>
-#include <complex>
- */
-
-
 namespace ublas  = boost::numeric::ublas;
 namespace lapack = boost::numeric::bindings::lapack;
 
 namespace bear
 {
+    // general case of diagonalization
     template<typename T>
     inline int diagonalize_gen(
                             ublas::matrix<T, ublas::column_major>& A, 
@@ -55,6 +43,7 @@ namespace bear
         return i_err;
     }
     
+    // diagonalize symetric matrix : trivial case because eigenvalues are all real with orthogonal eigenmatrix
     template<typename M, typename V>
     inline int diagonalize_sym(M& eigen_vectors, V& eigen_values) 
     {

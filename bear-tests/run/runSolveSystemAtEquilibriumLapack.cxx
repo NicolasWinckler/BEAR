@@ -38,10 +38,7 @@ typedef ublas::vector<std::complex<double> >                    vector_c;
 
 int main(int argc, char** argv) 
 {
-    ublas::range r (5, 13);
-    for (unsigned i = 0; i < r.size (); ++ i) {
-        std::cout << r (i) << std::endl;
-    }
+    
 
     matrix_d A(3,3);
     matrix_d D(3,3);
@@ -49,9 +46,19 @@ int main(int argc, char** argv)
     matrix_c P_inv(3,3);
     
     vector_c eigen_values(3);
-    A(0,0)=1; A(0,1)=2;  A(0,2)=0;
-    A(1,0)=0; A(1,1)=3;  A(2,2)=0;
-    A(2,0)=2; A(2,1)=-4; A(2,2)=2;
+    bool diagonalizable=false;
+    if(diagonalizable)
+    {
+        A(0,0)=1; A(0,1)=2;  A(0,2)=0;
+        A(1,0)=0; A(1,1)=3;  A(2,2)=0;
+        A(2,0)=2; A(2,1)=-4; A(2,2)=2;
+    }
+    else
+    {
+        A(0,0)=2; A(0,1)=0;  A(0,2)=0;
+        A(1,0)=0; A(1,1)=3;  A(2,2)=1;
+        A(2,0)=0; A(2,1)=0; A(2,2)=3;
+    }
     unsigned int dim=A.size1();
     
     int diag_gen_err=diagonalize_gen(A,eigen_values,&P,&P_inv);
@@ -69,7 +76,7 @@ int main(int argc, char** argv)
     for(unsigned int i=0; i<P_inv.size1(); i++)
     {
         for(unsigned int j=0; j<P_inv.size2(); j++)
-            std::cout<< P_inv(i,j).real() <<"           ";
+            std::cout<< "("<<P_inv(i,j).real() <<","<< P_inv(i,j).imag()<<")           ";
         std::cout<<"\n";
     }
     

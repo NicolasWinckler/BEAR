@@ -16,6 +16,7 @@
 #ifndef FAIRMQLOGGER_H_
 #define FAIRMQLOGGER_H_
 
+#include <fstream>
 #include <sstream>
 #include <sys/time.h>
 #include <iostream>
@@ -106,6 +107,56 @@ namespace bear
         
         return os.str();
     }
+    
+    
+    
+    
+    class default_sink
+    {
+    public:
+        
+        default_sink() : fOutput_file()
+        {
+            
+        }
+        
+        virtual ~default_sink()
+        {
+            fOutput_file.close();
+        }
+        
+        void open(const std::string& filename)
+        {
+            fOutput_file.open(filename.c_str(), std::ios::out);
+        }
+        
+        void close()
+        {
+            fOutput_file.close();
+        }
+        
+        template < typename T >
+        friend default_sink& operator <<( default_sink &sink, const T &data );
+        
+        
+    private:
+        std::ofstream fOutput_file;
+        
+    };
+    
+    
+    
+    template < typename T >
+    default_sink& operator <<( default_sink &sink, const T &data ) 
+    {
+        if (sink.fOutput_file.is_open())
+            sink.fOutput_file << data;
+        return sink;
+    }
+
+
+    
+    
     
     
     /*

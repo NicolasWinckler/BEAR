@@ -1,7 +1,7 @@
 #######################################
 # system of equations options
 
-eq-dim              =   15
+eq-dim              =   8
 
 #######################################
 # input options

@@ -519,6 +519,13 @@ namespace bear
                 //std::string val_str = (*q).filename().generic_string();
                 return std::make_tuple(val_str,std::string("  [Type=path]"),defaulted_val,empty_val);
             }
+            
+            if(auto q = boost::any_cast<std::size_t>(&value))
+            {
+                std::string val_str = variable_toString< std::size_t >(var_val);
+                //std::string val_str = (*q).filename().generic_string();
+                return std::make_tuple(val_str,std::string("  [Type=size_t]"),defaulted_val,empty_val);
+            }
 
             // if we get here, the type is not supported return unknown info
             return std::make_tuple(std::string("Unknown value"), std::string("  [Type=Unknown]"),defaulted_val,empty_val);

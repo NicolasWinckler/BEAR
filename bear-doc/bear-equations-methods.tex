@@ -29,10 +29,23 @@
 The rate of fraction of ion in the state $i$, $F_i$, is given by :
 \begin{equation}
 \frac{d}{dx}F_i = \sum_j \sigma_{ji} F_j - \sum_j \sigma_{ij} F_i
+\label{charge-state-eq-gen}
 \end{equation}
 
+For an $N$-level system, equation (\ref{charge-state-eq-gen}) becomes :
 
-These equations can be re-written in a linear system of equation of the following form :
+\begin{equation}
+\left\lbrace
+\begin{array}{lcl}
+\frac{dF_i}{dx}&=& \sum_{j=1}^{i-1} \sigma_{ji}^{EL} F_j  + \sum_{s=i+1}^N  \sigma_{si}^{EC} F_s   \\
+ & & \\
+ & - &   \left( \sum_{m=i+1}^{N} \sigma_{im}^{EL} +\sum_{k=1}^{i-1} \sigma_{ik}^{EC} \right) F_i \text{ , where } 1\leq i \leq N-1\\
+ & & \\
+1 &=&\sum_{i=1}^N F_i\\
+\end{array}\right.
+\end{equation}
+
+These equations can be re-arranged in a linear system of equation of the following form :
 \\ 
 
 $$(S_0)\left\lbrace
@@ -46,9 +59,9 @@ F'_{N-1} &=& \sum_{i=1}^N m_{N-1,i} \ \ F_i \\
 1 &=&\sum_{i=1}^N F_i\\
 \end{array}\right.$$
 \\
-where $m_{ij}$ are real and constant, and where index $i$ has range from 1 to $N-1$, and index $j$ from 1 to $N$. 
+where $m_{ij}$ are real and constant linear combination of the $\sigma_{pq}$, and where index $i$ has range from 1 to $N-1$, and index $j$ from 1 to $N$. 
 
-We will consider two cases : - the equilibrium case, that is, $dF/dx=0$, and the general one.
+We will consider two cases : - the equilibrium case, that is, $dF/dx=0$, and the general one, i.e. $dF/dx \neq 0$.
 \section{Equlibrium case} 
 \subsection{Equations}
 At equilibrium  $dF/dx=0$ and the system $S_0$ reduces to:
@@ -77,7 +90,7 @@ The solution of $S'_0$ is trivial :
 
 \section{ General case} 
  \subsection{Equations}
- With $F_N=1-\sum_{i=1}^{N-1} F_i$, the system $S_0$ reduces to :
+ With $F_N=1-\sum_{i=1}^{N-1} F_i$, the system $S_0$ reduces, by substitution of $F_N$, to :
 
 $$(S_1)\left\lbrace
 \begin{array}{lcl}
@@ -90,12 +103,12 @@ F'_{N-1} &=& \sum_{i=1}^{N-1} (m_{N-1,i}-m_{N-1,N}) \ \ F_i   +  m_{N-1,N}\\
 \\
 which can be rewritten as follow:
 \begin{equation}
- F'_{k} = \sum_{i=1}^{k} a_{k,i} \ \ F_i   +  g_k
+ F'_{k} = \sum_{i=1}^{N-1} a_{k,i} \ \ F_i   +  g_k
  \label{eqM1}
 \end{equation}
-
-
-or in matrix form :
+where 
+$$g_k = m_{k,N} = \sigma_{Nk}^{EC}  \text{ , with } 1<k<N$$
+In matrix form it becomes:
 
 %$$\frac{d}{dt}F=AF$$
 
@@ -104,7 +117,7 @@ or in matrix form :
 \label{eqM2}
 \end{equation}
 
-where, \\
+with, \\
 $\\ A=\begin{pmatrix}
 a_{11} & a_{12} & \ldots & a_{1,N-1} \\
 \vdots & \ddots & \ddots & \vdots  \\
@@ -120,6 +133,7 @@ a_{N-1,1} & \ldots & \ldots & a_{N-1,N-1}
  \vdots\\
  g_{N-1} \\ \end{pmatrix}\\$,\\
  
+ Note that this equation could be used to solve the equilibrium case (dF/dx=0) as well. In that case the solution is $F= - A^{-1} g$, with the dimensions of $F$, $A$, and $g$ equal to $N-1$.
  \subsection{Solutions}
  The equations  (\ref{eqM1}) and (\ref{eqM2}) are linear systems of differential equations with second (constant) members $g$. According to the Cauchy theorem, given the initial condition $F(x=0)=F_0$, there exists a unique solution to equation (\ref{eqM2}). The form of the solution is given by :
  
@@ -172,9 +186,31 @@ The solution to this equation have the form :\\
 which is a linear combination of exponential functions.
 
  \subsubsection*{Case 2 : $A$ diagonalizable only in $\mathbb{C}$}
-In that case  the complex eigen values that are non-real are pairs of complex conjugate, and it is sufficient to replace in the generatrice familly 
+In that case the non-real eigen values are pairs of complex conjugate, and it is sufficient to replace in the generatrice familly 
 $$ (\alpha e^{\lambda x} U ,  \beta e^{ \bar{\lambda} x} \bar{U}) \ \text{ with } \ (a\Re( e^{\lambda x} U ),  b \Im( e^{\lambda x} U) )$$
- where $U$ and $\bar{U}$ are pair of complex conjugate eigenvectors of $P$ : 
+ where $U$ and $\bar{U}$ are pairs of complex conjugate eigenvectors of $P$ . 
+\subsubsection*{Example:} 
+If we only have one pair of complex eigenvalues, e.g. $\lambda_1 = \theta + \omega i $ and $\lambda_2 = \theta - \omega i $, then the matrix $P= \{ v_1,v_2, ..., v_{N-1}\}$ will have one pair of complex conjugate eigenvectors $v_1$ and $v_2$ and the solution will be
+ 
+ \begin{equation}
+ F = (C_1 \Re( e^{i \omega  x}  \times v_1) + C_2 \Im(e^{i \omega x} \times v_1 ) e^{\theta x} +  \sum_{i \neq 1,2} C_i e^{\lambda_i x} v_i
+\end{equation}  
+Let's write the complex elements of the vector $v_1$ as $a_k + i b_k$ . Then, the complex eigen vectors contribution can be written as follows :
+ \begin{equation}
+ C_1  e^{\theta x} \begin{pmatrix}
+ a_1 \cos\omega x - b_1 \sin \omega x \\ 
+ a_2 \cos\omega x - b_2 \sin \omega x\\
+ \vdots\\
+ a_{N-1} \cos\omega x - b_{N-1} \sin\omega x \\ \end{pmatrix} + 
+ C_2  e^{\theta x} \begin{pmatrix}
+ a_1 \sin \omega x + b_1 \cos \omega x \\ 
+ a_2 \sin \omega x + b_2 \cos \omega x\\
+ \vdots\\
+ a_{N-1} \sin \omega x + b_{N-1} \cos \omega x \\ \end{pmatrix} 
+ \end{equation}
+ The unknown coefficients $C_i$ can be determined by the initial condition 
+ $$ Y(x=0) = P_{\Re}^{-1} F_0 $$
+ where $P_{\Re} = \{ \Re{(v_1)}, \Im{(v_1)}, v_3, ... , v_{N-1} \}$.
 
 
  
