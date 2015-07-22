@@ -1,7 +1,7 @@
 #BEAR: Balance Equations for Atomic Reactions (in dev)
 
-## License 
-BEAR  is distributed under the terms of the GNU Lesser General Public Licence version 3 (LGPL) version 3.
+## Licence 
+BEAR is distributed under the terms of the GNU Lesser General Public Licence version 3 (LGPL) version 3.
 
 ##Getting started
 
