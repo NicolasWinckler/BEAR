@@ -9,7 +9,6 @@
 #include "bear_equations.h"
 #include "solve_bear_equations.h"
 #include "matrix_diagonalization.h"
-#include "block_translation.h"
 
 #include <boost/numeric/ublas/storage.hpp>
 using namespace bear;
