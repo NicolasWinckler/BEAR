@@ -255,6 +255,20 @@ namespace bear
                         return val_str;
                     }
 
+                    // size_t
+                    if(auto q = boost::any_cast< size_t >(&value ))
+                    {
+                        val_str = variable_toString< size_t >(fvarmap[key]);
+                        return val_str;
+                    }
+
+                    // vector<size_t>
+                    if(auto q = boost::any_cast< std::vector<size_t> >(&value ))
+                    {
+                        val_str = variable_toString< std::vector<size_t> >(fvarmap[key]);
+                        return val_str;
+                    }
+                    
                     // float
                     if(auto q = boost::any_cast< float >(&value ))
                     {

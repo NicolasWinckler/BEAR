@@ -81,12 +81,12 @@ namespace bear
         int read_impl()
         {
             LOG(DEBUG)<<"in read_impl() ...";
-            ublas::range input_coef_range_i(  fvarmap.at("coef.index.i.min").template as<int>() , 
-                                              fvarmap.at("coef.index.i.max").template as<int>()+1
+            ublas::range input_coef_range_i(  fvarmap.at("coef.index.i.min").template as<size_t>() , 
+                                              fvarmap.at("coef.index.i.max").template as<size_t>()+1
                                            );
             
-            ublas::range input_coef_range_j(  fvarmap.at("coef.index.j.min").template as<int>() , 
-                                              fvarmap.at("coef.index.j.max").template as<int>()+1
+            ublas::range input_coef_range_j(  fvarmap.at("coef.index.j.min").template as<size_t>() , 
+                                              fvarmap.at("coef.index.j.max").template as<size_t>()+1
                                            );
             
             LOG(DEBUG)<<"init coefficients description ...";
@@ -105,15 +105,16 @@ namespace bear
             // get vm data into the fCoef_list container 
             fCoef_list.clear();
             
-            int index_i_min = std::numeric_limits<int>::max(); 
-            int index_i_max = std::numeric_limits<int>::min();
-            int index_j_min = std::numeric_limits<int>::max(); 
-            int index_j_max = std::numeric_limits<int>::min();
+            size_t index_i_min = std::numeric_limits<size_t>::max(); 
+            size_t index_i_max = std::numeric_limits<size_t>::min();
+            size_t index_j_min = std::numeric_limits<size_t>::max(); 
+            size_t index_j_max = std::numeric_limits<size_t>::min();
             
             // go over user-provided indices and if the 
             // matrix element Qij is found as non defaulted, 
             // store the indices and value in fCoef_list map
             LOG(DEBUG)<<"searching for coefficients ...";
+            // todo :remove long long cast and replace it properly
             for(const auto& i : input_coef_range_i)
                 for(const auto& j : input_coef_range_j)
                 {
@@ -127,23 +128,23 @@ namespace bear
                         {
                             LOG(DEBUG)<<"found cross-section coefficient : "<< key <<" = "<< vm.at(key).as<data_type>();
                         
-                            std::pair<int,int> coef_key(i,j);
+                            std::pair<size_t,size_t> coef_key(i,j);
                             data_type coef_val=vm.at(key).as<data_type>();
                             fCoef_list.insert( std::make_pair(coef_key, coef_val) );
                             
                             // to resize matrix properly :
                             // get the max/min indices of the coef.
                             // this is necessary to avoid having rows or column full of zeros
-                            if((long long)i<index_i_min)
+                            if(i<index_i_min)
                                 index_i_min=i;
                             
-                            if((long long)i>index_i_max)
+                            if(i>index_i_max)
                                 index_i_max=i;
                             
-                            if((long long)j<index_j_min)
+                            if(j<index_j_min)
                                 index_j_min=j;
                             
-                            if((long long)j>index_j_max)
+                            if(j>index_j_max)
                                 index_j_max=j;
                             
                             LOG(MAXDEBUG)<<" i="<< i << " min="<<index_i_min <<" max="<<index_i_max;
@@ -158,11 +159,13 @@ namespace bear
             // and update the corresponding private members
             fCoef_range_i=coef_range_i;
             fCoef_range_j=coef_range_j;
+            fEqDim=fvarmap["eq-dim"].template as<size_t>();
             
             
-            LOG(MAXDEBUG)  <<" generating equations parameters : dim_i = " << fCoef_range_i.size()
-                        <<" offset_i = " << fCoef_range_i.start() << " last index_i = " 
-                        << fCoef_range_i.size()+fCoef_range_i.start()-1;
+            
+            LOG(MAXDEBUG)   <<" generating equations parameters : dim_i = " << fCoef_range_i.size()
+                            <<" offset_i = " << fCoef_range_i.start() << " last index_i = " 
+                            << fCoef_range_i.size()+fCoef_range_i.start()-1;
 
             for(const auto& i : fCoef_range_i)
                 LOG(MAXDEBUG)<<" range-i="<<i;
@@ -174,18 +177,12 @@ namespace bear
             for(const auto& j : fCoef_range_j)
                 LOG(MAXDEBUG)<<" range-j="<<j;
             
-            
-            
-            LOG(MAXDEBUG)<<"checking for index ranges ...";
-            LOG(WARNING)<<"WARNING test ...";
             // perform some checks. 
-            // (maybe do an assert here and replace warning with error)
-            if(fCoef_range_i.start()!=fCoef_range_j.start())
+            LOG(MAXDEBUG)<<"checking for index ranges ...";
+            if(fCoef_range_i!=fCoef_range_j)
             {
-                LOG(ERROR)<<"i and j start index are different and should be the same.";
+                LOG(ERROR)<<"i and j range index are different and should be the same.";
                 LOG(ERROR)<<"check the given cross-section coefficients in file "<<filename.string();
-                
-                
                 return 1;
             }
             else
@@ -197,10 +194,24 @@ namespace bear
                     LOG(ERROR)<<"check the given cross-section coefficients in file "<<filename.string();
                     LOG(ERROR)<<"or the configuration file ";
                     //LOG(WARNING)<<"check the cross-section coefficient indices or the user provided dimension";
-                    return 1;
                     fEqDim=fCoef_range_i.size();
+                    return 1;
                 }
             }
+            
+            
+            // if all checks are fine, fill missing coefs in new reduced range with zeros :
+            for(const auto& i : fCoef_range_i)
+                for(const auto& j : fCoef_range_j)
+                {
+                    std::pair<size_t,size_t> coef_key(i,j);
+                    if(!fCoef_list.count(coef_key))
+                    {
+                        fCoef_list.insert( std::make_pair(coef_key, 0) );
+                    }
+                }
+                
+            
             return 0;
         }
 
@@ -216,10 +227,9 @@ namespace bear
             LOG(DEBUG)<<"generating equations";
             if(dynamic_eq_system())
                 return 1;
-            
             int verbose=fvarmap["verbose"].template as<int>();
             LOG(DEBUG) << "printing matrix to process : ";
-            if(logger::DEBUG==verbose)
+            if(logger::DEBUG>verbose)
                 std::cout << fMat << std::endl;
             return 0;
         }
@@ -229,9 +239,9 @@ namespace bear
         //case dF/dx = MF = 0 with dim(M) = N
         int static_eq_system()
         {
-            int dim=fCoef_range_i.size();
-            int offset=fCoef_range_i.start();
-            int last_index=offset+dim;
+            size_t dim=fCoef_range_i.size();
+            size_t offset=fCoef_range_i.start();
+            size_t last_index=offset+dim;
             
             matrix mat(dim,dim);
             for(const auto& p : fCoef_range_i)
@@ -256,12 +266,12 @@ namespace bear
         int dynamic_eq_system()
         {
             
-            int dim=fCoef_range_i.size();
-            int offset=fCoef_range_i.start();
-            int last_index=offset+dim;
-            LOG(DEBUG)<<"generating equations parameters : dim = " << dim
+            size_t dim=fCoef_range_i.size();
+            size_t offset=fCoef_range_i.start();
+            size_t last_index=offset+dim-1;
+            LOG(MAXDEBUG)<<"in dynamic_eq_system() equations parameters : dim = " << dim
                         <<" offset = " << offset << " last index = " << last_index;
-            ublas::range reduced_range(offset,offset+dim);// last point excluded : dim=N-1
+            ublas::range reduced_range(offset,last_index);// last point excluded : dim=N-1
             
             if(dim>1)
             {
@@ -269,16 +279,21 @@ namespace bear
                 matrix mat(dim-1,dim-1);
                 for(const auto& p : reduced_range)
                     for(const auto& q : reduced_range)
-                            mat(p-offset,q-offset)=compute_matrix_element(p,q)-compute_matrix_element(p,last_index);
-
+                    {
+                        
+                        mat(p-offset,q-offset)=compute_matrix_element(p,q)-compute_matrix_element(p,last_index);
+                        LOG(MAXDEBUG)<<"mat("<<p<<","<<q <<") = "<< mat(p-offset,q-offset);
+                    }
                 // clear and copy
                 fMat.clear();
                 fMat=mat;
-                
-                ublas::vector<double> Cte(dim-1);
+                ublas::vector<double> Cte(reduced_range.size());
                 for(const auto& p : reduced_range)
-                    Cte(p)=compute_matrix_element(p,last_index);
-                
+                {
+                    Cte(p-offset)=compute_matrix_element(p,last_index);
+                    LOG(MAXDEBUG)<<"p-offset="<<p-offset << " <-> v("<< p <<")="<<compute_matrix_element(p,last_index);
+                }
+                std::cout<<Cte<<std::endl;
                 // clear and copy
                 f2nd_member.clear();
                 f2nd_member=Cte;
@@ -299,7 +314,7 @@ namespace bear
     protected:
         
         // same as Kronecker-Delta symbol, to help finding the matrix elements of the system of equations
-        data_type Fpq(int k, int q)
+        data_type Fpq(size_t k, size_t q)
         {
             if(k==q)
                 return data_type(1);
@@ -308,35 +323,35 @@ namespace bear
         }
 
         // provide element below diagonal of the matrix eq system
-        data_type ionization_sum(int i, int q)
+        data_type ionization_sum(size_t i, size_t q)
         {
             data_type val=data_type();
-            for(int j(1);j<=i-1;j++)
-                val+=fCoef_list.at(std::pair<int,int>(j,i))*Fpq(j,q);
+            for(size_t j(1);j<=i-1;j++)
+                val+=fCoef_list.at(std::pair<size_t,size_t>(j,i))*Fpq(j,q);
             return val;
         }
 
         // provide element above diagonal of the matrix eq system
-        data_type recombination_sum(int i, int q)
+        data_type recombination_sum(size_t i, size_t q)
         {
             data_type val=data_type();
-            for(int s(i+1);s<=fEqDim;s++)
-                val+=fCoef_list.at(std::pair<int,int>(s,i))*Fpq(s,q);
+            for(size_t s(i+1);s<=fEqDim;s++)
+                val+=fCoef_list.at(std::pair<size_t,size_t>(s,i))*Fpq(s,q);
             return val;
         }
 
         // provide diagonal element of the matrix eq system
-        data_type diagonal_sum(int i, int q)
+        data_type diagonal_sum(size_t i, size_t q)
         {
             data_type val=data_type();
-            for(int m(i+1);m<=fEqDim;m++)
-                val+=fCoef_list.at(std::pair<int,int>(i,m))*Fpq(i,q);
-            for(int k(1);k<=i-1;k++)
-                val+=fCoef_list.at(std::pair<int,int>(i,k))*Fpq(i,q);
+            for(size_t m(i+1);m<=fEqDim;m++)
+                val+=fCoef_list.at(std::pair<size_t,size_t>(i,m))*Fpq(i,q);
+            for(size_t k(1);k<=i-1;k++)
+                val+=fCoef_list.at(std::pair<size_t,size_t>(i,k))*Fpq(i,q);
             return val;
         }
 
-        data_type compute_matrix_element(int p, int q)
+        data_type compute_matrix_element(size_t p, size_t q)
         {
             data_type val=data_type();
             val=ionization_sum(p,q);
@@ -347,12 +362,12 @@ namespace bear
 
     private:
 
-        int fEqDim;
-        int fCoefDim;
+        size_t fEqDim;
+        size_t fCoefDim;
         ublas::range fCoef_range_i;
         ublas::range fCoef_range_j;
         ublas::range fSystem_range;
-        std::map<std::pair<int,int>, data_type> fCoef_list;
+        std::map<std::pair<size_t,size_t>, data_type> fCoef_list;
         matrix fMat;
         ublas::vector<double> f2nd_member;
     };
