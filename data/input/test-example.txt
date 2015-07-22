@@ -1,4 +1,4 @@
-# U + H2 at 0 mbar example
+# Set_10_U+H2_0.mbar.txt : U + H2 at 0 mbar example
 Q.1.2 = 0.25			
 Q.1.3 = 0.05
 Q.1.4 = 0.012

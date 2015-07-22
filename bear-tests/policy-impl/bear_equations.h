@@ -37,7 +37,7 @@ namespace bear
         typedef bear_equations<data_type,ui_type>                        self_type;  // this type 
         typedef generate_equations<bear_equations<T> >                  gener_type;  // generate equations policy
         typedef ublas::matrix<data_type>                                    matrix;  // boost matrix type
-        
+        typedef ublas::vector<double>                                       vector;
         using ui_type::fvarmap;// boost variable map or equivalent : need API data_type val=fvarmap["key"].as<data_type>();
         using ui_type::parse_cfgFile;
         
@@ -66,6 +66,8 @@ namespace bear
             return fMat;
         }
         
+        
+        
         virtual int parse(const int argc, char** argv, bool AllowUnregistered = false)
         {
             ui_type::parse(argc,argv,AllowUnregistered);
@@ -75,7 +77,10 @@ namespace bear
         
         
         
-        
+        vector& snd_member()
+        {
+            return f2nd_member;
+        }
         
         // read input and get coefficients of the system
         int read_impl()
@@ -197,6 +202,9 @@ namespace bear
                     fEqDim=fCoef_range_i.size();
                     return 1;
                 }
+                
+                // temporary : force user dim to found dim
+                fEqDim=fCoef_range_i.size();
             }
             
             
@@ -219,18 +227,29 @@ namespace bear
         int generate_impl()
         {
             //fEqDim=fvarmap["eq-dim"].template as<int>();
-            
-            
-            //if(static_eq_system())
-            //    return 1;
-
             LOG(DEBUG)<<"generating equations";
-            if(dynamic_eq_system())
-                return 1;
+            // temporary if(staticeq) :
+            bool staticeq=false;
+            
+            if(staticeq)
+            {
+                if(static_eq_system())
+                    return 1;
+            }
+            else
+            {
+                if(dynamic_eq_system())
+                    return 1;
+            }
+            
             int verbose=fvarmap["verbose"].template as<int>();
-            LOG(DEBUG) << "printing matrix to process : ";
-            if(logger::DEBUG>verbose)
+            LOG(DEBUG) << "printing generated matrix to process : ";
+            if(logger::DEBUG>=verbose)
                 std::cout << fMat << std::endl;
+            LOG(DEBUG) << "and second member vector : ";
+            if(logger::DEBUG>=verbose)
+                std::cout << f2nd_member << std::endl;
+            
             return 0;
         }
         
@@ -241,7 +260,7 @@ namespace bear
         {
             size_t dim=fCoef_range_i.size();
             size_t offset=fCoef_range_i.start();
-            size_t last_index=offset+dim;
+            size_t last_index=offset+dim-1;
             
             matrix mat(dim,dim);
             for(const auto& p : fCoef_range_i)
@@ -269,8 +288,8 @@ namespace bear
             size_t dim=fCoef_range_i.size();
             size_t offset=fCoef_range_i.start();
             size_t last_index=offset+dim-1;
-            LOG(MAXDEBUG)<<"in dynamic_eq_system() equations parameters : dim = " << dim
-                        <<" offset = " << offset << " last index = " << last_index;
+            LOG(MAXDEBUG)   <<"in dynamic_eq_system() equations parameters : dim = " << dim
+                            <<" offset = " << offset << " last index = " << last_index;
             ublas::range reduced_range(offset,last_index);// last point excluded : dim=N-1
             
             if(dim>1)
@@ -287,13 +306,13 @@ namespace bear
                 // clear and copy
                 fMat.clear();
                 fMat=mat;
-                ublas::vector<double> Cte(reduced_range.size());
+                vector Cte(reduced_range.size());
                 for(const auto& p : reduced_range)
                 {
                     Cte(p-offset)=compute_matrix_element(p,last_index);
                     LOG(MAXDEBUG)<<"p-offset="<<p-offset << " <-> v("<< p <<")="<<compute_matrix_element(p,last_index);
                 }
-                std::cout<<Cte<<std::endl;
+                //std::cout<<Cte<<std::endl;
                 // clear and copy
                 f2nd_member.clear();
                 f2nd_member=Cte;
@@ -356,7 +375,7 @@ namespace bear
             data_type val=data_type();
             val=ionization_sum(p,q);
             val+=recombination_sum(p,q);
-            val+=diagonal_sum(p,q);
+            val-=diagonal_sum(p,q);
             return val;
         }
 
@@ -369,7 +388,7 @@ namespace bear
         ublas::range fSystem_range;
         std::map<std::pair<size_t,size_t>, data_type> fCoef_list;
         matrix fMat;
-        ublas::vector<double> f2nd_member;
+        vector f2nd_member;
     };
 }
 

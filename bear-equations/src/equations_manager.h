@@ -34,7 +34,7 @@ namespace bear
 
         int run()
         {
-            if(solve_eq_type::solve(eq_type::output()))
+            if(solve_eq_type::solve(eq_type::output(), eq_type::snd_member()))
                 return 1;
             return 0;
         }
