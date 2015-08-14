@@ -163,8 +163,8 @@ namespace bear
             
             if(fMethod!=kRungeKutta && fMethod!=kDiagonalization)
                 throw std::runtime_error("Unrecognized method to solve the equations");
-            
-            //fCanvas->SetLogx(0);
+            if(fMethod==kDiagonalization)
+            fCanvas->SetLogx();
             for(const auto& p : container_map)
             {
                 
@@ -186,7 +186,7 @@ namespace bear
                     p.second->Draw();
                 }
             }
-            
+            if(fMethod==kRungeKutta)
             fCanvas->SetLogx();
             fLegend->Draw();
             return 0;

@@ -43,37 +43,39 @@ namespace bear
                                 fInput_desc("cross-sections description"),
                                 fInfile_cmd_desc("input file options"),
                                 fInfile_cfg_desc("input file options"),
-                                fVarmap_input_file(), thickness_scale(), cross_section_scale()
+                                fVarmap_input_file(), 
+                                thickness_scale(), 
+                                cross_section_scale()
         {
             
-            thickness_scale["fg/cm2"]  = 1.e-15;      // femto
-            thickness_scale["pg/cm2"]  = 1.e-12;      // pico
-            thickness_scale["ng/cm2"]  = 1.e-9;       // nano
-            thickness_scale["mug/cm2"] = 1.e-6;       // micro
-            thickness_scale["mg/cm2"]  = 1.e-3;       // milli
-            thickness_scale["cg/cm2"]  = 1.e-2;       // centi
-            thickness_scale["10 mg/cm2"]  = 1.e-2;       // centi
+            thickness_scale["fg/cm2"]           = 1.e-15;      // femto
+            thickness_scale["pg/cm2"]           = 1.e-12;      // pico
+            thickness_scale["ng/cm2"]           = 1.e-9;       // nano
+            thickness_scale["mug/cm2"]          = 1.e-6;       // micro
+            thickness_scale["mg/cm2"]           = 1.e-3;       // milli
+            thickness_scale["cg/cm2"]           = 1.e-2;       // centi
+            thickness_scale["10 mg/cm2"]        = 1.e-2;       // centi
             
-            thickness_scale["g/cm2"] = 1.;            // no prefix
+            thickness_scale["g/cm2"]            = 1.;            // no prefix
             
-            thickness_scale["kg/cm2"] = 1.e+3;        // kilo
-            thickness_scale["Mg/cm2"] = 1.e+6;        // Mega
-            thickness_scale["Gg/cm2"] = 1.e+9;        // Giga
-            thickness_scale["Tg/cm2"] = 1.e+12;       // Tera
-            thickness_scale["Pg/cm2"] = 1.e+15;       // Peta
+            thickness_scale["kg/cm2"]           = 1.e+3;        // kilo
+            thickness_scale["Mg/cm2"]           = 1.e+6;        // Mega
+            thickness_scale["Gg/cm2"]           = 1.e+9;        // Giga
+            thickness_scale["Tg/cm2"]           = 1.e+12;       // Tera
+            thickness_scale["Pg/cm2"]           = 1.e+15;       // Peta
             
             
-            cross_section_scale["cm2"]  = 1.;
-            cross_section_scale["1e-16 cm2"]  = 1.e-16;
-            cross_section_scale["pb"]   = 1.e-36;
-            cross_section_scale["nb"]   = 1.e-33;
-            cross_section_scale["mub"]  = 1.e-30;
-            cross_section_scale["mb"]   = 1.e-27;
-            cross_section_scale["b"]    = 1.e-24;
-            cross_section_scale["kb"]   = 1.e-21;
-            cross_section_scale["Mb"]   = 1.e-18;
-            cross_section_scale["Gb"]   = 1.e-15;
-            cross_section_scale["Tb"]   = 1.e-12;
+            cross_section_scale["cm2"]          = 1.;
+            cross_section_scale["1e-16 cm2"]    = 1.e-16;
+            cross_section_scale["pb"]           = 1.e-36;
+            cross_section_scale["nb"]           = 1.e-33;
+            cross_section_scale["mub"]          = 1.e-30;
+            cross_section_scale["mb"]           = 1.e-27;
+            cross_section_scale["b"]            = 1.e-24;
+            cross_section_scale["kb"]           = 1.e-21;
+            cross_section_scale["Mb"]           = 1.e-18;
+            cross_section_scale["Gb"]           = 1.e-15;
+            cross_section_scale["Tb"]           = 1.e-12;
         }
 
         virtual ~bear_user_interface(){}
