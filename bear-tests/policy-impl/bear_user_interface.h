@@ -52,6 +52,7 @@ namespace bear
             thickness_scale["mug/cm2"] = 1.e-6;       // micro
             thickness_scale["mg/cm2"]  = 1.e-3;       // milli
             thickness_scale["cg/cm2"]  = 1.e-2;       // centi
+            thickness_scale["10 mg/cm2"]  = 1.e-2;       // centi
             
             thickness_scale["g/cm2"] = 1.;            // no prefix
             
