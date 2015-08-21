@@ -210,10 +210,10 @@ namespace bear
                 ("cross.section.unit",          po::value<std::string>()->default_value("unknown cross-section unit"),      "Units symbol of cross-sections (e.g. cm2, mm2...)")
                 ("thickness.unit",              po::value<std::string>()->default_value("unknown thickness unit"),          "Units of the thickness (e.g. mg/cm2)")
                 ("thickness.maximum",           po::value<double>()->default_value(20.),                                    "Maximal thickness")
-                ("thickness.minimum",           po::value<double>()->default_value(0.),                                     "Minimum thickness")
+                ("thickness.minimum",           po::value<double>()->default_value(1.e-3),                                     "Minimum thickness")
                 ("thickness.point.number",      po::value<std::size_t>()->default_value(1000),                              "Maximal thickness")
                 ("fraction.maximum",            po::value<double>()->default_value(1.1),                                    "Maximal fraction range (for plot)")
-                ("fraction.minimum",            po::value<double>()->default_value(0.),                                     "Minimum fraction range (for plot)")
+                ("fraction.minimum",            po::value<double>()->default_value(1.e-3),                                     "Minimum fraction range (for plot)")
                 
                     ;
             return 0;

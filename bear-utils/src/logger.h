@@ -145,7 +145,7 @@ namespace bear
     };
     
     
-    
+    //*
     template < typename T >
     default_sink& operator <<( default_sink &sink, const T &data ) 
     {
@@ -153,6 +153,7 @@ namespace bear
             sink.fOutput_file << data;
         return sink;
     }
+     // */
 
 
     

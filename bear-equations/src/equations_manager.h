@@ -69,6 +69,7 @@ namespace bear
         {
 
             gui_type::init(eq_type::fVarmap_input_file);
+            
             gui_type::plot(solve_eq_type::fGeneral_solution);
             return 0;
         }

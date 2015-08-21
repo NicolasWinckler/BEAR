@@ -17,6 +17,7 @@
 
 namespace bear
 {
+    /*
     template<>
     default_sink& operator << < ublas::matrix<double,ublas::column_major> >
                 ( default_sink &sink, const ublas::matrix<double,ublas::column_major> &data ) 
@@ -34,7 +35,7 @@ namespace bear
             sink.fOutput_file << data;
         return sink;
     }
-    
+    */
     std::ostream& operator<<(std::ostream& os, const ublas::matrix<double,ublas::column_major> &mat)
     {
         for(std::size_t i(0); i<mat.size1(); i++)

@@ -122,7 +122,11 @@ namespace bear
                                  diagonalisation_case(diagonalizable::unknown),
                                  fSink(), fvarmap()
         {}
-        virtual ~solve_bear_equations(){fSink.close();}
+        virtual ~solve_bear_equations()
+        {
+            
+        //fSink.close();
+        }
         
         int init(const variables_map& vm)
         {

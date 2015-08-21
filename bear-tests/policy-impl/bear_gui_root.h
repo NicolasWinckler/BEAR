@@ -45,9 +45,9 @@ namespace bear
         }
         virtual ~bear_gui_root()
         {
-            for(auto& p : fFunctions)
-                if(p.second)
-                    delete p.second;
+            //for(auto& p : fFunctions)
+                //if(p.second)
+                   // delete p.second;
             
             if(fLegend)
                 delete fLegend;
@@ -100,31 +100,24 @@ namespace bear
             
             fLegend = new TLegend(0.4,0.7,0.9,0.9);
             fLegend->SetNColumns(4);
-            //fXmin=vm.at("thickness.minimum").template as<double>();
+
             return 0;
         }
         
         
         
         
-        // 
         int plot(const std::map<std::size_t, std::string>& input_functions)
         {
             fMethod=kDiagonalization;
             fTitle+=" (Diagonalization method)";
-            
-            
             for(const auto& p : input_functions)
             {
-                std::string tf1_name("f");
                 std::string name = "F" + std::to_string(p.first+1);
-                tf1_name+=name;
-                fFunctions[p.first] = new TF1(name.c_str(), p.second.c_str(), fXmin, fXmax);
+                fFunctions[p.first] = std::make_shared<TF1>(name.c_str(), p.second.c_str(), fXmin, fXmax);
                 fFunctions.at(p.first)->SetNpx(fNpoint);
                 fFunctions.at(p.first)->SetLineColor(p.first+1);
-                
-                fLegend->AddEntry(fFunctions[p.first], name.c_str());
-                
+                fLegend->AddEntry(fFunctions[p.first].get(), name.c_str());
                 
             }
             draw(fFunctions);
@@ -148,6 +141,7 @@ namespace bear
             return 0;
         }
         
+        
         template <typename T>
         int draw(std::map<std::size_t,T>& container_map)
         {
@@ -163,31 +157,33 @@ namespace bear
             
             if(fMethod!=kRungeKutta && fMethod!=kDiagonalization)
                 throw std::runtime_error("Unrecognized method to solve the equations");
-            if(fMethod==kDiagonalization)
+            
             fCanvas->SetLogx();
-            for(const auto& p : container_map)
+            for(auto& p : container_map)
             {
                 
                 if(p.first!=0)
                     p.second->Draw("SAME");
                 else
                 {
-                    //p.second->GetXaxis()->CenterTitle(true);
-                    //p.second->GetYaxis()->CenterTitle(true);
+                    p.second->SetTitle(fTitle.c_str());
                     p.second->GetYaxis()->SetRangeUser(fYmin,fYmax);
+                    
+                    
+                    p.second->GetXaxis()->CenterTitle();
+                    p.second->GetYaxis()->CenterTitle();
+                    
+                    p.second->GetXaxis()->SetTitleOffset(1.2);
+                    p.second->GetYaxis()->SetTitleOffset(1.2);
                     
                     p.second->GetXaxis()->SetTitle(fXTitle.c_str());
                     p.second->GetYaxis()->SetTitle(fYTitle.c_str());
                     
-                    
-                    
-                    
-                    p.second->SetTitle(fTitle.c_str());
                     p.second->Draw();
                 }
             }
-            if(fMethod==kRungeKutta)
-            fCanvas->SetLogx();
+
+            //fCanvas->SetLogx();
             fLegend->Draw();
             return 0;
         }
@@ -197,7 +193,8 @@ namespace bear
         TLegend* fLegend;
         //TF1 *fa1;
         std::map<std::size_t, std::string> fInput;
-        std::map<std::size_t, TF1*> fFunctions;
+        //std::map<std::size_t, TF1*> fFunctions;
+        std::map<std::size_t, std::shared_ptr<TF1> > fFunctions;
         double fXmin;
         double fXmax;
         double fYmin;
