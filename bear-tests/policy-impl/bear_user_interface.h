@@ -104,7 +104,8 @@ namespace bear
             }
             
             int verbose=fvarmap["verbose"].as<int>();
-            SET_LOGGER_LEVEL(verbose);
+            //SET_LOGGER_LEVEL(verbose);
+            SET_LOG_LEVEL(MAXDEBUG);
             print_options();
             
             return 0;

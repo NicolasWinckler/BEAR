@@ -7,27 +7,37 @@
  ################################################################################
 # Create a library called "libbear_utils" 
 
-set(INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/bear-utils/src)
+set(INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/bear-utils/src ${CMAKE_SOURCE_DIR}/bear-utils/run)
 
-Set(SYSTEM_INCLUDE_DIRECTORIES
-  ${SYSTEM_INCLUDE_DIRECTORIES}
-)
+set(SYSTEM_INCLUDE_DIRECTORIES ${SYSTEM_INCLUDE_DIRECTORIES})
 
 include_directories(${INCLUDE_DIRECTORIES})
 include_directories(${SYSTEM_INCLUDE_DIRECTORIES})
 
-set(LINK_DIRECTORIES
-${Boost_LIBRARY_DIRS}
-) 
+set(LINK_DIRECTORIES ${Boost_LIBRARY_DIRS}) 
 
 link_directories(${LINK_DIRECTORIES})
 
-Set(SRCS
+set(SRCS
       src/options_manager.cxx
       src/logger.cxx
     )
 
-Set(LIBRARY_NAME bear_utils)
-Set(DEPENDENCIES boost_system boost_filesystem boost_program_options)
+set(LIBRARY_NAME bear_utils)
+set(DEPENDENCIES 
+    boost_log 
+    boost_log_setup 
+    boost_thread 
+    boost_date_time 
+    boost_filesystem 
+    boost_system
+    boost_program_options
+    pthread
+)
 
 GENERATE_LIBRARY()
+
+set(EXE_NAME runtestLogger)
+set(SRCS run/testLogger.cxx)
+set(DEPENDENCIES bear_utils)
+GENERATE_EXECUTABLE()

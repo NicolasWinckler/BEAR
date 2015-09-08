@@ -5,90 +5,178 @@
  *         GNU Lesser General Public Licence version 3 (LGPL) version 3,        *  
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
-/**
- * logger.cxx
- *
- * @since 2012-12-04
- * @author D. Klein, A. Rybalchenko
- */
-
-// refactored from FairRoot::FairMQ project
-
-
 #include "logger.h"
 
-namespace bear
+#include <boost/log/core/core.hpp>
+#include <boost/log/expressions/formatters/date_time.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/support/date_time.hpp>
+#include <boost/core/null_deleter.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+#include <fstream>
+#include <ostream>
+
+
+
+namespace logging = boost::log;
+namespace src = boost::log::sources;
+namespace expr = boost::log::expressions;
+namespace sinks = boost::log::sinks;
+namespace attrs = boost::log::attributes;
+
+
+
+BOOST_LOG_GLOBAL_LOGGER_INIT(global_logger, src::severity_logger_mt) 
 {
-    int logger::fMinLogLevel = logger::DEBUG;
+    src::severity_logger_mt<custom_severity_level> global_logger;
+    global_logger.add_attribute("TimeStamp", attrs::local_clock());
+    init_log_console();
+    return global_logger;
+}
 
-    logger::logger()
-        : os()
-        , fLogLevel(DEBUG)
-    {
-    }
+void init_log_console()
+{
+    // add a text sink
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
+    // add "console" output stream to our sink
+    sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+    // specify the format of the log message 
+    sink->set_formatter(&init_log_formatter<tag_console>);
+    // add sink to the core
+    logging::core::get()->add_sink(sink);
+}
 
-    logger::~logger()
-    {
-        if (fLogLevel >= logger::fMinLogLevel && fLogLevel < logger::NOLOG)
-        {
-            std::cout << os.str() << std::endl;
-        }
-    }
+void init_log_file(const std::string& filename, custom_severity_level threshold, log_op::operation op, const std::string& id)
+{
+    // add a text sink
+    std::string formatted_filename(filename);
+    formatted_filename+=id;
+    formatted_filename+="_%Y-%m-%d_%H-%M-%S.%N.log";
+    boost::shared_ptr< sinks::text_file_backend > backend =
+        boost::make_shared< sinks::text_file_backend >
+            (
+            boost::log::keywords::file_name = formatted_filename, 
+            boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+            // rotate at midnight every day
+            boost::log::keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
+            // log collector,
+            // -- maximum total size of the stored log files is 1GB.
+            // -- minimum free space on the drive is 2GB
+            boost::log::keywords::max_size = 1000 * 1024 * 1024,
+            boost::log::keywords::min_free_space = 2000 * 1024 * 1024,
+            boost::log::keywords::auto_flush = true
+            //keywords::time_based_rotation = &is_it_time_to_rotate
+        );
+    typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
+    boost::shared_ptr< sink_t > sink(new sink_t(backend));
+    
+    // specify the format of the log message 
+    sink->set_formatter(&init_log_formatter<tag_file>);
 
-    std::ostringstream& logger::Log(int type)
+    switch (op)
     {
-        std::string type_str;
-        
-        fLogLevel = type;
-        switch (type)
-        {
-            case MAXDEBUG :
-                type_str = write_in<color::FG_CYAN>("MAXDEBUG");
-                break;
+        case log_op::operation::EQUAL :
+            sink->set_filter(severity == threshold);
+            break;
             
-            case DEBUG :
-                type_str = write_in<color::FG_BLUE>("DEBUG");
-                break;
-
-            case INFO :
-                type_str = write_in<color::FG_GREEN>("INFO");
-                break;
-
-            case WARNING :
-                type_str = write_in<color::FG_YELLOW>("WARNING");
-                break;
-
-            case ERROR :
-                type_str = write_in<color::FG_RED>("ERROR");
-                break;    
-                
-            case NOLOG :
-                type_str = write_in<color::FG_DEFAULT>("NOLOG");
-                break;
+        case log_op::operation::GREATER_THAN :
+            sink->set_filter(severity > threshold);
+            break;
             
-            default:
-                break;
-        }
+        case log_op::operation::GREATER_EQ_THAN :
+            sink->set_filter(severity >= threshold);
+            break;
+            
+        case log_op::operation::LESS_THAN :
+            sink->set_filter(severity < threshold);
+            break;
+            
+        case log_op::operation::LESS_EQ_THAN :
+            sink->set_filter(severity <= threshold);
+            break;
         
-        timestamp_t tm = get_timestamp();
-        timestamp_t ms = tm / 1000.0L;
-        timestamp_t s = ms / 1000.0L;
-        time_t t = s;
-        // size_t fractional_seconds = ms % 1000;
-        char mbstr[100];
-        strftime(mbstr, 100, "%H:%M:%S", localtime(&t));
-
-        os << "[" << write_in<color::FG_CYAN>(mbstr) << "]"
-           << "[" << type_str << "] ";
-        
-        return os;
+        default:
+            break;
     }
+    logging::core::get()->add_sink(sink);
+}
 
-    timestamp_t get_timestamp()
+// temporary : to be replaced with c++11 lambda
+void set_global_log_level(log_op::operation op, custom_severity_level threshold )
+{
+    switch (threshold)
     {
-        struct timeval now;
-        gettimeofday(&now, NULL);
-        return now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
+        case custom_severity_level::MAXDEBUG :
+            set_global_log_level_operation(op,custom_severity_level::MAXDEBUG);
+            break;
+            
+        case custom_severity_level::DEBUG :
+            set_global_log_level_operation(op,custom_severity_level::DEBUG);
+            break;
+            
+        case custom_severity_level::RESULTS :
+            set_global_log_level_operation(op,custom_severity_level::RESULTS);
+            break;
+            
+        case custom_severity_level::INFO :
+            set_global_log_level_operation(op,custom_severity_level::INFO);
+            break;
+            
+        case custom_severity_level::WARN :
+            set_global_log_level_operation(op,custom_severity_level::WARN);
+            break;
+        
+        case custom_severity_level::STATE :
+            set_global_log_level_operation(op,custom_severity_level::STATE);
+            break;
+            
+        case custom_severity_level::ERROR :
+            set_global_log_level_operation(op,custom_severity_level::ERROR);
+            break;
+            
+        case custom_severity_level::NOLOG :
+            set_global_log_level_operation(op,custom_severity_level::NOLOG);
+            break;
+            
+        default:
+            break;
     }
+}
 
-}// end namespace
+void set_global_log_level_operation(log_op::operation op, custom_severity_level threshold )
+{
+    switch (op)
+    {
+        case log_op::operation::EQUAL :
+            boost::log::core::get()->set_filter(severity == threshold);
+            break;
+            
+        case log_op::operation::GREATER_THAN :
+            boost::log::core::get()->set_filter(severity > threshold);
+            break;
+            
+        case log_op::operation::GREATER_EQ_THAN :
+            boost::log::core::get()->set_filter(severity >= threshold);
+            break;
+            
+        case log_op::operation::LESS_THAN :
+            boost::log::core::get()->set_filter(severity < threshold);
+            break;
+            
+        case log_op::operation::LESS_EQ_THAN :
+            boost::log::core::get()->set_filter(severity <= threshold);
+            break;
+        
+        default:
+            break;
+    }
+}
+
+

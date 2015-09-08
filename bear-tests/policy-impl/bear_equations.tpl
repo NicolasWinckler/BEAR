@@ -292,11 +292,11 @@ namespace bear
 
         int verbose=fvarmap["verbose"].template as<int>();
         LOG(DEBUG) << "printing generated matrix to process : ";
-        if(logger::DEBUG>=verbose)
-            std::cout << fMat << std::endl;
+        //if(logger::DEBUG>=verbose)
+        //    std::cout << fMat << std::endl;
         LOG(DEBUG) << "and second member vector : ";
-        if(logger::DEBUG>=verbose)
-            std::cout << f2nd_member << std::endl;
+        //if(logger::DEBUG>=verbose)
+        //    std::cout << f2nd_member << std::endl;
 
         return 0;
     }

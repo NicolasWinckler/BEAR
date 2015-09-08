@@ -5,214 +5,111 @@
  *         GNU Lesser General Public Licence version 3 (LGPL) version 3,        *  
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
-/**
- * logger.h
+/* 
+ * File:   logger.h
+ * Author: winckler
  *
- * @since 2012-12-04
- * @author D. Klein, A. Rybalchenko
+ * Created on August 21, 2015, 6:12 PM
  */
-// refactored from FairRoot::FairMQ project
+#ifndef LOGGER_H
+#define	LOGGER_H
 
-#ifndef FAIRMQLOGGER_H_
-#define FAIRMQLOGGER_H_
+#define BOOST_LOG_DYN_LINK 1 // necessary when linking the boost_log library dynamically
 
-#include <fstream>
-#include <sstream>
-#include <sys/time.h>
+// std
+#include <type_traits>
+#include <cstddef>
 #include <iostream>
-#include <iomanip>
-#include <ctime>
-#include <string>
-#include <stdio.h>
 
-/*
- 
- #include "colormod.h" // namespace Color
-#include <iostream>
-using namespace std;
-int main() {
-    Color::Modifier red(Color::FG_RED);
-    Color::Modifier def(Color::FG_DEFAULT);
-    cout << "This ->" << red << "word" << def << "<- is red." << endl;
-}
- */
+// boost
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/log/sources/global_logger_storage.hpp>
+#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/expressions/attr_fwd.hpp>
+#include <boost/log/expressions/attr.hpp>
 
-namespace bear
+// fairmq
+#include "logger_def.h"
+
+// Note : the following types and values must be defined in the included logger_def.h :
+// 1- custom_severity_level 
+// 2- SEVERITY_THRESHOLD
+// 3- tag_console
+// 4- tag_file
+
+// Note : operation enum temporary : (until we replace it with c++11 lambda expression)
+namespace log_op
 {
-    
-    class logger
+    enum operation
     {
-      public:
-        enum Level
-        {
-            MAXDEBUG = -1,
-            DEBUG,
-            INFO,
-            WARNING,
-            ERROR,
-            NOLOG
-        };
-
-        logger();
-        virtual ~logger();
-        std::ostringstream& Log(int type);
-
-        static void SetLogLevel(int logLevel)
-        {
-            logger::fMinLogLevel = logLevel;
-        }
-
-      private:
-        std::ostringstream os;
-        int fLogLevel;
-        static int fMinLogLevel;
+        EQUAL,
+        GREATER_THAN,
+        GREATER_EQ_THAN,
+        LESS_THAN,
+        LESS_EQ_THAN
     };
-    
-    
-    // Helper functions and macros definitions
-    
-    typedef unsigned long long timestamp_t;
-    timestamp_t get_timestamp();
-    
-    #define LOG(type) bear::logger().Log(bear::logger::type)
-    #define SET_LOG_LEVEL(loglevel) bear::logger::SetLogLevel(bear::logger::loglevel)
-    #define SET_LOGGER_LEVEL(loglevel) bear::logger::SetLogLevel(loglevel)
-
-    namespace color 
-    {
-        enum code 
-        {
-            FG_BLACK    = 30,
-            FG_RED      = 31,
-            FG_GREEN    = 32,
-            FG_YELLOW   = 33,
-            FG_BLUE     = 34,
-            FG_MAGENTA  = 35,
-            FG_CYAN     = 36,
-            FG_WHITE    = 37,
-            FG_DEFAULT  = 39,
-            BG_RED      = 41,
-            BG_GREEN    = 42,
-            BG_BLUE     = 44,
-            BG_DEFAULT  = 49
-        };
-    }
-    
-    template <color::code color> 
-    std::string write_in(const std::string& text_in_bold)
-    {
-        std::ostringstream os;
-        
-        os << "\033[01;" << color << "m" << text_in_bold << "\033[0m";
-        
-        return os.str();
-    }
-    
-    
-    
-    
-    class default_sink
-    {
-    public:
-        
-        default_sink() : fOutput_file()
-        {
-            
-        }
-        
-        virtual ~default_sink()
-        {
-            fOutput_file.close();
-        }
-        
-        void open(const std::string& filename)
-        {
-            fOutput_file.open(filename.c_str(), std::ios::out);
-        }
-        
-        void close()
-        {
-            fOutput_file.close();
-        }
-        
-        template < typename T >
-        friend default_sink& operator <<( default_sink &sink, const T &data );
-        
-        
-    private:
-        std::ofstream fOutput_file;
-        
-    };
-    
-    
-    //*
-    template < typename T >
-    default_sink& operator <<( default_sink &sink, const T &data ) 
-    {
-        if (sink.fOutput_file.is_open())
-            sink.fOutput_file << data;
-        return sink;
-    }
-     // */
+}
 
 
-    
-    
-    
-    
-    /*
-    struct lvl 
-    {
-        static const logger::Level  MAXDEBUG = logger::MAXDEBUG;
-        static const logger::Level  DEBUG    = logger::DEBUG;
-        static const logger::Level  INFO     = logger::INFO;
-        static const logger::Level  WARNING  = logger::WARNING;
-        static const logger::Level  ERROR    = logger::ERROR;
-        static const logger::Level  NOLOG    = logger::NOLOG;
-    };
-    
-        
-    template <logger::Level level> 
-    struct log_format;
-    
-    template <> 
-    struct log_format<logger::MAXDEBUG>
-    {
-        log_format(std::string& val){val=write_in<color::FG_CYAN>("MAXDEBUG");}
-    };
-    
-    template <> 
-    struct log_format<logger::DEBUG>
-    {
-        log_format(std::string& val){val=write_in<color::FG_BLUE>("DEBUG");}
-    };
+// declaration of the init function for the global logger
+void init_log_console();
+void init_log_file( const std::string& filename, 
+                    custom_severity_level threshold=SEVERITY_THRESHOLD, 
+                    log_op::operation=log_op::GREATER_EQ_THAN,
+                    const std::string& id=""
+                  );
+void set_global_log_level(  log_op::operation op=log_op::GREATER_EQ_THAN, 
+                            custom_severity_level threshold=SEVERITY_THRESHOLD );
+void set_global_log_level_operation(  log_op::operation op=log_op::GREATER_EQ_THAN, 
+                            custom_severity_level threshold=SEVERITY_THRESHOLD );
+// register a global logger (declaration)
+BOOST_LOG_GLOBAL_LOGGER(global_logger, boost::log::sources::severity_logger_mt<custom_severity_level>)
 
-    template <> 
-    struct log_format<logger::INFO>
-    {
-        log_format(std::string& val){val=write_in<color::FG_GREEN>("INFO");}
-    };
+BOOST_LOG_ATTRIBUTE_KEYWORD(fairmq_logger_timestamp, "TimeStamp", boost::posix_time::ptime)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", custom_severity_level)        
 
-    template <> 
-    struct log_format<logger::WARNING>
-    {
-        log_format(std::string& val){val=write_in<color::FG_YELLOW>("WARNING");}
-    };
 
-    template <> 
-    struct log_format<logger::ERROR>
-    {
-        log_format(std::string& val){val=write_in<color::FG_RED>("ERROR");}
-    };
-
-    template <> 
-    struct log_format<logger::NOLOG>
-    {
-        log_format(std::string& val){val=write_in<color::FG_DEFAULT>("NOLOG");}
-    };
-    //*/
+template<typename T>
+void init_log_formatter(const boost::log::record_view &view, boost::log::formatting_ostream &os)
+{
+    os      << "[" ;
+    
+    if(std::is_same<T,tag_console>::value)
+        os<<"\033[01;36m";
+    
+    auto date_time_formatter = 
+        boost::log::expressions::stream 
+            << boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%H:%M:%S");
+    date_time_formatter(view, os);
+    
+    if(std::is_same<T,tag_console>::value)
+        os<<"\033[0m";
+    
+    os      << "]"
+            << "[" 
+            << view.attribute_values()["Severity"].extract<custom_severity_level,T>()
+            << "] "
+            //<< " - " 
+            << view.attribute_values()["Message"].extract<std::string>();
 }
 
 
 
-#endif /* FAIRMQLOGGER_H_ */
+// helper macros 
+#define LOG(severity) BOOST_LOG_SEV(global_logger::get(),custom_severity_level::severity)
+#define MQLOG(severity) BOOST_LOG_SEV(global_logger::get(),custom_severity_level::severity)
+#define SET_LOG_LEVEL(loglevel) boost::log::core::get()->set_filter(severity >= custom_severity_level::loglevel);
+#define SET_LOG_FILTER(logfilter)  boost::log::core::get()->set_filter(severity == custom_severity_level::logfilter);
+
+// filename : path to file name without extension
+#define INIT_LOG_FILE(filename) init_log_file(filename);
+#define INIT_LOG_FILE_LVL(filename,loglevel) init_log_file(filename,custom_severity_level::loglevel);
+#define INIT_LOG_FILE_FILTER(filename,op,loglevel) init_log_file(filename,custom_severity_level::loglevel,log_op::op);
+//INIT_LOG_FILE_FILTER_MP : add id to log filename for multiprocess
+#define INIT_LOG_FILE_FILTER_MP(filename,op,loglevel,id) init_log_file(filename,custom_severity_level::loglevel,log_op::GREATER_EQ_THAN,id);
+        
+        
+#endif

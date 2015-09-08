@@ -63,7 +63,7 @@ namespace bear
     
     
     
-    template<typename T, typename U=bear_analytic_solution<T>, typename V=default_sink>
+    template<typename T, typename U=bear_analytic_solution<T> >
     class solve_bear_equations : protected U
     {
         public:
@@ -79,7 +79,6 @@ namespace bear
         private:
           typedef T                                                              data_type;
           typedef U                                                          solution_type;
-          typedef V                                                              sink_type;
           typedef ublas::vector<data_type>                                        vector_d;
           typedef ublas::vector<std::complex<data_type> >                         vector_c;
           typedef ublas::matrix<data_type,ublas::column_major>                    matrix_d;
@@ -99,7 +98,6 @@ namespace bear
           vector_d fEquilibrium_solution;    // Fi at equilibrium, should be eq to part. sol.
           //vector_d fGeneral_solution;    // homogeneous solution
           //vector_d fGeneral_solution;        // general solution = homogeneous + particular solution
-          sink_type fSink;
           enum diagonalizable diagonalisation_case;
           variables_map fvarmap;
           
@@ -120,12 +118,10 @@ namespace bear
                                  fEquilibrium_solution(),
                                  //fGeneral_solution(),
                                  diagonalisation_case(diagonalizable::unknown),
-                                 fSink(), fvarmap()
+                                 fvarmap()
         {}
         virtual ~solve_bear_equations()
         {
-            
-        //fSink.close();
         }
         
         int init(const variables_map& vm)
@@ -137,8 +133,7 @@ namespace bear
             output+="/Results_";
             output+=filename;
             LOG(INFO)<<"Print output to : "<<output;
-            fSink.open(output);
-            fSink<<"Input file :"<<filename<<"\n";
+            LOG(RESULTS)<<"Input file :"<<filename<<"\n";
             return 0;
         }
         
@@ -177,11 +172,11 @@ namespace bear
         int print_analytical_solution(const std::vector<double>& vec)
         {
             
-            fSink<<"ANALYTICAL SOLUTION\n";//<<std::endl;
+            LOG(RESULTS)<<"ANALYTICAL SOLUTION\n";//<<std::endl;
             for(int i(0);i<vec.size()-1;i++)
-                fSink<<"F"<<i+1<<"="<<vec.at(i)<<"\n";//<<std::endl;
+                LOG(RESULTS)<<"F"<<i+1<<"="<<vec.at(i)<<"\n";//<<std::endl;
             
-            fSink<<"sum="<<vec.at(vec.size()-1)<<"\n";//<<std::endl;
+            LOG(RESULTS)<<"sum="<<vec.at(vec.size()-1)<<"\n";//<<std::endl;
             
             return 0;
         }
@@ -461,17 +456,17 @@ namespace bear
             LOG(MAXDEBUG)<<"running solve static eq";
             fA=mat;
             InvertMatrix<matrix_d>(fA,fA_inv);
-            fSink<<"SOLUTION AT EQUILIBRIUM\n";//<<std::endl;
+            LOG(RESULTS)<<"SOLUTION AT EQUILIBRIUM\n";//<<std::endl;
             double sum=0.0;
             for(size_t i(0);i<fA_inv.size1();i++)
             {
                 LOG(INFO)<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1);
-                fSink<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1)<<"\n";// << std::endl;
+                LOG(RESULTS)<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1)<<"\n";// << std::endl;
                 sum+=fA_inv(i,fA_inv.size1()-1);
             }
             
             LOG(INFO)<<"sum = "<< sum;
-            fSink<<"sum = "<< sum<<"\n";// << std::endl;
+            LOG(RESULTS)<<"sum = "<< sum<<"\n";// << std::endl;
             
             return 0;
         }
@@ -483,9 +478,9 @@ namespace bear
         int solve_dyneq_at_equilibrium(const matrix_d& mat, const vector_d& vec)
         {
             LOG(MAXDEBUG)<<"running solve dynamic eq";
-            fSink<<"found a "<<mat.size1()+1<<" level system\n";
+            LOG(RESULTS)<<"found a "<<mat.size1()+1<<" level system\n";
             
-            fSink<<"SOLUTION AT EQUILIBRIUM :\n";
+            LOG(RESULTS)<<"SOLUTION AT EQUILIBRIUM :\n";
             fA=mat;
             f2nd_member=vec;
             InvertMatrix<matrix_d>(fA,fA_inv);
@@ -503,7 +498,7 @@ namespace bear
                 FN+=neg_Fi(i);
                 sum+=fEquilibrium_solution(i);
                 LOG(INFO)<<"F"<<i+1<<"="<<fEquilibrium_solution(i);
-                fSink<<"F"<<i+1<<"="<<fEquilibrium_solution(i)<<"\n";
+                LOG(RESULTS)<<"F"<<i+1<<"="<<fEquilibrium_solution(i)<<"\n";
             }
             // add the last one (1-sum)
             fEquilibrium_solution(neg_Fi.size())=FN;
@@ -511,8 +506,8 @@ namespace bear
             
             LOG(INFO)<<"F"<< neg_Fi.size()+1<<"="<<fEquilibrium_solution(neg_Fi.size());
             LOG(INFO)<<"sum = "<< sum;
-            fSink<<"F" << neg_Fi.size() + 1 << "="<<fEquilibrium_solution(neg_Fi.size())<<"\n";
-            fSink<<"sum = "<< sum<<"\n";
+            LOG(RESULTS)<<"F" << neg_Fi.size() + 1 << "="<<fEquilibrium_solution(neg_Fi.size())<<"\n";
+            LOG(RESULTS)<<"sum = "<< sum<<"\n";
             return 0;
         }
         
