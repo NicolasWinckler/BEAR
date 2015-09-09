@@ -125,7 +125,7 @@ namespace bear
             //SET_LOGGER_LEVEL(verbose);
             //SET_LOG_LEVEL(MAXDEBUG);
             bear::severity_level lvl = static_cast<bear::severity_level>(verbose);
-            set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map["MAXDEBUG"]);
+            set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map["INFO"]);
             INIT_LOG_FILE_FILTER("results_log_test",EQUAL,RESULTS);
             INIT_NEW_FILE(output,EQUAL,RESULTS);
             

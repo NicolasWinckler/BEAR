@@ -8,6 +8,7 @@
 #ifndef EQUATIONS_MANAGER_H
 #define	EQUATIONS_MANAGER_H
 #include <vector>
+
 namespace bear
 {
 

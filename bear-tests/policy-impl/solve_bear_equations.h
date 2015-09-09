@@ -101,11 +101,12 @@ namespace bear
           enum diagonalizable diagonalisation_case;
           variables_map fvarmap;
           std::vector<double> fApproximated_solution;
-    protected:
+          
+        protected:
           using solution_type::fGeneral_solution;
           using solution_type::fUnit_convertor;
           
-    public:
+        public:
         
         solve_bear_equations() : solution_type(),
                                  fA(), 

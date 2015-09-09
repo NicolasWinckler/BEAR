@@ -390,7 +390,8 @@ namespace bear
 
 
         LOG(INFO) <<std::setfill ('*') << std::setw(leftSpace_len) <<"*"
-                    <<std::setw(print_optionsTitle.length()) << print_optionsTitle 
+                    <<std::setw(print_optionsTitle.length()) 
+                << std::setfill(' ')<< print_optionsTitle 
                     <<std::setfill ('*') << std::setw(rightSpace_len) <<"*";
 
         LOG(INFO) <<std::setfill ('*') << std::setw (total_len+3)<<"*";
@@ -404,7 +405,7 @@ namespace bear
             std::string empty_str;
             key_str=p.first;
             std::tie(val_str,typeInfo_str,default_str,empty_str)=p.second;
-            LOG(INFO) << std::setw(maxlen_1st)<<std::left 
+            LOG(INFO) << std::setfill (' ')<< std::setw(maxlen_1st)<<std::left 
                         << p.first << " = " 
                         << std::setw(maxlen_2nd) 
                         << val_str 
