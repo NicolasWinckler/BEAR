@@ -377,9 +377,9 @@ namespace bear
     /// ////////////////////////////////////////////////////////////////////////////////
     // temporary
     template <typename T, typename U >
-    std::vector<double> bear_equations<T,U>::get_analytical_solution()
+    std::vector<double> bear_equations<T,U>::get_1electron_approximation_solution()
     {
-        LOG(INFO)<<"ANALYTICAL SOLUTION - matrix dim = "<<fMat.size1();
+        LOG(MAXDEBUG)<<"ANALYTICAL SOLUTION - matrix dim = "<<fMat.size1();
         
         size_t syst_dim=fMat.size1()+1;
         
@@ -406,7 +406,7 @@ namespace bear
         double F1=1/denominator;
         ana_sol.push_back(F1);
         //std::cout<<"denominator="<<denominator<<std::endl;
-        LOG(INFO)<<"F1="<<F1;
+        LOG(MAXDEBUG)<<"F1="<<F1;
         double Fi=F1;
         double Fip1=0.0;
         double sum=F1;
@@ -414,14 +414,16 @@ namespace bear
         {
             //Fip1=Fi*(fQ[i][i+1]/fQ[i+1][i]);
             Fip1=Fi*(fCoef_list.at(coef(i,i+1))/fCoef_list.at(coef(i+1,i)));
-            LOG(INFO)<<"F"<<i+1<<"="<<Fip1;
+            LOG(MAXDEBUG)<<"F"<<i+1<<"="<<Fip1;
             ana_sol.push_back(Fip1);
             Fi=Fip1;
             sum+=Fip1;
 
         }
         ana_sol.push_back(sum);
-        LOG(INFO)<<"sum="<<sum;
+        LOG(MAXDEBUG)<<"sum="<<sum;
+        
+        
         //*/
         return ana_sol;
     }

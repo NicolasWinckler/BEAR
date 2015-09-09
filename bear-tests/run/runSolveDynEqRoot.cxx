@@ -40,10 +40,6 @@ int main(int argc, char** argv)
         if(man.run())
             return 1;
         
-        LOG(INFO)<<"saving ...";
-        if(man.save()) 
-            return 1;
-        
         TApplication app("App", nullptr, 0);
         
         LOG(INFO)<<"plotting ...";

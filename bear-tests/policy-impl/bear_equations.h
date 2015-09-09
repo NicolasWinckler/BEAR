@@ -76,7 +76,7 @@ namespace bear
         //case dF/dx = MF = 0 with dim(M) = N
         int static_eq_system();
         // temp, compute a simple formula taken into account a capture and loss of a single electron (c.f. Betz)
-        std::vector<double> get_analytical_solution();
+        std::vector<double> get_1electron_approximation_solution();
         
     protected:
         /// ////////////////////////////////////////////////////////////////////////////////

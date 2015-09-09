@@ -50,17 +50,19 @@ namespace bear
 
         int run()
         {
+            
+            solve_eq_type::set_approximated_solution(eq_type::get_1electron_approximation_solution());
+            
             if(solve_eq_type::solve(eq_type::output(), eq_type::snd_member()))
                 return 1;
+            
+            
             return 0;
         }
         
         int save()
         {
-            std::vector<data_type> vec=eq_type::get_analytical_solution();//temp
-            solve_eq_type::print_analytical_solution(vec);//temp
-            if(vec.size()==0)
-                return 1;
+            
             
             return 0;
         }
@@ -71,6 +73,7 @@ namespace bear
             gui_type::init(eq_type::fVarmap_input_file);
             
             gui_type::plot(solve_eq_type::fGeneral_solution);
+            gui_type::print_table();
             return 0;
         }
         

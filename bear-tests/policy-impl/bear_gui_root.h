@@ -103,14 +103,62 @@ namespace bear
 
             return 0;
         }
-        
-        
+
+        int print_table()
+        {
+            LOG(RESULTS)<<" ";
+            LOG(RESULTS)<<"##################################";
+            LOG(RESULTS)<<"#TABLE :";
+            std::ostringstream os_title;
+            os_title<< std::setw(16)
+                    //<<std::left
+                    << bstream_centered("X") << "    ";
+            for(auto& p : fFunctions)
+            {
+                os_title<< std::setw(16)
+                        //<<std::left
+                        << bstream_centered("F"+std::to_string( p.first + 1)) << "    ";
+            }
+            os_title<<std::setw(16)
+                    //<<std::left
+                    <<bstream_centered("Sum");
+            LOG(RESULTS)<<os_title.str();
+            double N=(double)fNpoint;
+            double step =(fXmax-fXmin)/N;
+            double sum=0;
+            for(int i(0);i<fNpoint;i++)
+            {
+                sum=0;
+                std::ostringstream os_eval;
+                double idoub = (double)i;
+                double x=idoub*step+fXmin;
+                os_eval<< std::setw(16)
+                        //<<std::left
+                        //<< std::setprecision(10) 
+                        << std::scientific
+                        <<bstream_centered(to_string_scientific(x))<<"    ";
+                for(auto& p : fFunctions)
+                {
+                    
+                    os_eval << std::setw(16)
+                            //<<std::left
+                            //<< std::setprecision(12) 
+                            << bstream_centered(to_string_scientific(p.second->Eval(x))) << "    ";
+                    sum+=p.second->Eval(x);
+                }
+                os_eval << std::setw(16)
+                        //<< std::left 
+                        << bstream_centered(to_string_scientific(sum));
+                LOG(RESULTS)<<os_eval.str();
+            }
+            return 0;
+        }
         
         
         int plot(const std::map<std::size_t, std::string>& input_functions)
         {
             fMethod=kDiagonalization;
-            fTitle+=" (Diagonalization method)";
+            //fTitle+=" (Diagonalization method)";
             for(const auto& p : input_functions)
             {
                 std::string name = "F" + std::to_string(p.first+1);
@@ -118,7 +166,6 @@ namespace bear
                 fFunctions.at(p.first)->SetNpx(fNpoint);
                 fFunctions.at(p.first)->SetLineColor(p.first+1);
                 fLegend->AddEntry(fFunctions[p.first].get(), name.c_str());
-                
             }
             draw(fFunctions);
             return 0;

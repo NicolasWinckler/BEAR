@@ -18,11 +18,14 @@
 #include <array>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <iostream>
+#include <iomanip>
 
 #include <boost/log/utility/manipulators/to_log.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
-namespace fairmq
+namespace bear
 {
     enum severity_level
     {
@@ -75,7 +78,7 @@ namespace fairmq
 }
 
 // helper function to format in color console output
-template <fairmq::color::code color> 
+template <bear::color::code color> 
 inline std::string write_in(const std::string& text_in_bold)
 {
     std::ostringstream os;
@@ -85,7 +88,7 @@ inline std::string write_in(const std::string& text_in_bold)
 }
 
 // typedef
-typedef fairmq::severity_level custom_severity_level;
+typedef bear::severity_level custom_severity_level;
 #define SEVERITY_THRESHOLD custom_severity_level::MAXDEBUG
 
 // tags used for log console or file formatting
@@ -102,41 +105,41 @@ inline boost::log::formatting_ostream& operator<<
 {
     custom_severity_level level = manip.get();
     std::size_t idx=static_cast< std::size_t >(level);
-    if ( idx < fairmq::g_LogSeverityLevelString.size() )
+    if ( idx < bear::g_LogSeverityLevelString.size() )
     {
         //strm <<" idx = "<<idx <<" ";
         switch (level)
         {
             case custom_severity_level::MAXDEBUG :
-                strm << write_in<fairmq::color::FG_BLUE>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_BLUE>(bear::g_LogSeverityLevelString.at(idx));
                 break;
             
             case custom_severity_level::DEBUG :
-                strm << write_in<fairmq::color::FG_BLUE>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_BLUE>(bear::g_LogSeverityLevelString.at(idx));
                 break;
 
             case custom_severity_level::RESULTS :
-                strm << write_in<fairmq::color::FG_MAGENTA>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_MAGENTA>(bear::g_LogSeverityLevelString.at(idx));
                 break;
 
             case custom_severity_level::INFO :
-                strm << write_in<fairmq::color::FG_GREEN>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_GREEN>(bear::g_LogSeverityLevelString.at(idx));
                 break;    
                 
             case custom_severity_level::WARN :
-                strm << write_in<fairmq::color::FG_YELLOW>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_YELLOW>(bear::g_LogSeverityLevelString.at(idx));
                 break;
 
             case custom_severity_level::STATE :
-                strm << write_in<fairmq::color::FG_MAGENTA>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_MAGENTA>(bear::g_LogSeverityLevelString.at(idx));
                 break;    
                 
             case custom_severity_level::ERROR :
-                strm << write_in<fairmq::color::FG_RED>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_RED>(bear::g_LogSeverityLevelString.at(idx));
                 break;    
                 
             case custom_severity_level::NOLOG :
-                strm << write_in<fairmq::color::FG_DEFAULT>(fairmq::g_LogSeverityLevelString.at(idx));
+                strm << write_in<bear::color::FG_DEFAULT>(bear::g_LogSeverityLevelString.at(idx));
                 break;
             
             default:
@@ -146,7 +149,7 @@ inline boost::log::formatting_ostream& operator<<
     }
     else
     {
-        strm    << write_in<fairmq::color::FG_RED>("Unknown log level ")
+        strm    << write_in<bear::color::FG_RED>("Unknown log level ")
                 << "(int level = "<<static_cast< int >(level)
                 <<")";
     }
@@ -162,11 +165,11 @@ inline boost::log::formatting_ostream& operator<<
 {
     custom_severity_level level = manip.get();
     std::size_t idx=static_cast< std::size_t >(level);
-    if ( idx < fairmq::g_LogSeverityLevelString.size() )
-        strm << fairmq::g_LogSeverityLevelString.at(idx);
+    if ( idx < bear::g_LogSeverityLevelString.size() )
+        strm << bear::g_LogSeverityLevelString.at(idx);
     else
     {
-        strm    << write_in<fairmq::color::FG_RED>("Unknown log level ")
+        strm    << write_in<bear::color::FG_RED>("Unknown log level ")
                 << "(int level = "<<static_cast< int >(level)
                 <<")";
     }
@@ -176,8 +179,57 @@ inline boost::log::formatting_ostream& operator<<
 
 
 
+// other helper functions
 
+namespace bear
+{
 
+    
+    template <typename T>
+    std::string to_string_scientific(const T a_value)
+    {
+        std::ostringstream out;
+        out << std::scientific << a_value;
+        return out.str();
+    }
+    
+    
+    
+    template<typename charT, typename traits = std::char_traits<charT> >
+    class bstream_center_helper 
+    {
+        std::basic_string<charT, traits> str_;
+    public:
+        bstream_center_helper(std::basic_string<charT, traits> str) : str_(str) {}
+        template<typename a, typename b>
+        friend std::basic_ostream<a, b>& operator<<(std::basic_ostream<a, b>& s, const bstream_center_helper<a, b>& c);
+    };
+
+    template<typename charT, typename traits = std::char_traits<charT> >
+    inline bstream_center_helper<charT, traits> bstream_centered(std::basic_string<charT, traits> str) {
+        return bstream_center_helper<charT, traits>(str);
+    }
+
+    // redeclare for std::string directly so we can support anything that implicitly converts to std::string
+    inline bstream_center_helper<std::string::value_type, std::string::traits_type> bstream_centered(const std::string& str) {
+        return bstream_center_helper<std::string::value_type, std::string::traits_type>(str);
+    }
+
+    template<typename charT, typename traits>
+    inline std::basic_ostream<charT, traits>& operator<<(std::basic_ostream<charT, traits>& s, const bstream_center_helper<charT, traits>& c) {
+        std::streamsize w = s.width();
+        if (w > c.str_.length()) {
+            std::streamsize left = (w + c.str_.length()) / 2;
+            s.width(left);
+            s << c.str_;
+            s.width(w - left);
+            s << "";
+        } else {
+            s << c.str_;
+        }
+        return s;
+    }
+}
 
 #endif	/* LOGGER_DEF_H */
 

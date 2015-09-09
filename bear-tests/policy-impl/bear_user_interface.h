@@ -30,7 +30,7 @@ namespace bear
         //6.022140857(74)×1023 mol−1
         //2.73159734(12)×1026 (lb-mol)−1
         //1.707248434(77)×1025 (oz-mol)−1
-        
+        std::map<std::string,bear::severity_level> fSeverity_map; 
         
      public:
 
@@ -45,7 +45,8 @@ namespace bear
                                 fInfile_cfg_desc("input file options"),
                                 fVarmap_input_file(), 
                                 thickness_scale(), 
-                                cross_section_scale()
+                                cross_section_scale(),
+                                fSeverity_map()
         {
             
             thickness_scale["fg/cm2"]           = 1.e-15;      // femto
@@ -76,6 +77,16 @@ namespace bear
             cross_section_scale["Mb"]           = 1.e-18;
             cross_section_scale["Gb"]           = 1.e-15;
             cross_section_scale["Tb"]           = 1.e-12;
+            
+            fSeverity_map["MAXDEBUG"]           = bear::severity_level::MAXDEBUG;
+            fSeverity_map["DEBUG"]              = bear::severity_level::DEBUG;
+            fSeverity_map["RESULTS"]            = bear::severity_level::RESULTS;
+            fSeverity_map["INFO"]               = bear::severity_level::INFO;
+            fSeverity_map["WARN"]               = bear::severity_level::WARN;
+            fSeverity_map["ERROR"]              = bear::severity_level::ERROR;
+            fSeverity_map["STATE"]              = bear::severity_level::STATE;
+            fSeverity_map["NOLOG"]              = bear::severity_level::NOLOG;
+            
         }
 
         virtual ~bear_user_interface(){}
@@ -104,8 +115,23 @@ namespace bear
             }
             
             int verbose=fvarmap["verbose"].as<int>();
+            
+            fs::path input=fvarmap["input-file"].template as<fs::path>();
+            std::string filename=input.stem().string();
+            std::string output=fvarmap["output-directory"].template as<fs::path>().string();
+            output+="/Results_";
+            output+=filename;
+            
             //SET_LOGGER_LEVEL(verbose);
-            SET_LOG_LEVEL(MAXDEBUG);
+            //SET_LOG_LEVEL(MAXDEBUG);
+            bear::severity_level lvl = static_cast<bear::severity_level>(verbose);
+            set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map["MAXDEBUG"]);
+            INIT_LOG_FILE_FILTER("results_log_test",EQUAL,RESULTS);
+            INIT_NEW_FILE(output,EQUAL,RESULTS);
+            
+            LOG(INFO)<<"Print output to : "<<output;
+            LOG(RESULTS)<<"Input file :"<<filename;
+            
             print_options();
             
             return 0;

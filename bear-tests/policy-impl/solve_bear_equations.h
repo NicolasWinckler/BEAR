@@ -100,7 +100,7 @@ namespace bear
           //vector_d fGeneral_solution;        // general solution = homogeneous + particular solution
           enum diagonalizable diagonalisation_case;
           variables_map fvarmap;
-          
+          std::vector<double> fApproximated_solution;
     protected:
           using solution_type::fGeneral_solution;
           using solution_type::fUnit_convertor;
@@ -118,7 +118,7 @@ namespace bear
                                  fEquilibrium_solution(),
                                  //fGeneral_solution(),
                                  diagonalisation_case(diagonalizable::unknown),
-                                 fvarmap()
+                                 fvarmap(), fApproximated_solution()
         {}
         virtual ~solve_bear_equations()
         {
@@ -127,13 +127,8 @@ namespace bear
         int init(const variables_map& vm)
         {
             fvarmap=vm;
-            fs::path input=fvarmap["input-file"].template as<fs::path>();
-            std::string filename=input.filename().string();
-            std::string output=fvarmap["output-directory"].template as<fs::path>().string();
-            output+="/Results_";
-            output+=filename;
-            LOG(INFO)<<"Print output to : "<<output;
-            LOG(RESULTS)<<"Input file :"<<filename<<"\n";
+            
+            
             return 0;
         }
         
@@ -167,17 +162,37 @@ namespace bear
             return 0;
         }
         
-        
-        // temp
-        int print_analytical_solution(const std::vector<double>& vec)
+        int set_approximated_solution(const std::vector<double>& vec)
         {
+            fApproximated_solution=vec;
+            if(fApproximated_solution.size()<1)
+                return 1;
             
-            LOG(RESULTS)<<"ANALYTICAL SOLUTION\n";//<<std::endl;
-            for(int i(0);i<vec.size()-1;i++)
-                LOG(RESULTS)<<"F"<<i+1<<"="<<vec.at(i)<<"\n";//<<std::endl;
+            return 0;
             
-            LOG(RESULTS)<<"sum="<<vec.at(vec.size()-1)<<"\n";//<<std::endl;
+        }
+        // temp
+        int print_approximated_solution()
+        {
+            if(fApproximated_solution.size()<1)
+                return 1;
             
+            LOG(RESULTS)<<" ";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<"#  EQUILIBRIUM CHARGE STATE DISTRIBUTION  (1-electron approximation)     #";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<" ";
+            double mean_charge(0);
+            for(int i(0);i<fApproximated_solution.size()-1;i++)
+            {
+                double q(i+1);
+                mean_charge+=q*fApproximated_solution.at(i);
+                LOG(RESULTS)<<"F"<<i+1<<"="<<fApproximated_solution.at(i);
+                
+            }
+            LOG(RESULTS)<<"sum="<<fApproximated_solution.at(fApproximated_solution.size()-1);
+            
+            LOG(RESULTS)<<"<q>="<<mean_charge;
             return 0;
         }
         
@@ -456,17 +471,19 @@ namespace bear
             LOG(MAXDEBUG)<<"running solve static eq";
             fA=mat;
             InvertMatrix<matrix_d>(fA,fA_inv);
-            LOG(RESULTS)<<"SOLUTION AT EQUILIBRIUM\n";//<<std::endl;
+            LOG(RESULTS)<<" ";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<"#                EQUILIBRIUM CHARGE STATE DISTRIBUTION                   #";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<" ";
             double sum=0.0;
             for(size_t i(0);i<fA_inv.size1();i++)
             {
-                LOG(INFO)<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1);
-                LOG(RESULTS)<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1)<<"\n";// << std::endl;
+                LOG(RESULTS)<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1);// << std::endl;
                 sum+=fA_inv(i,fA_inv.size1()-1);
             }
             
-            LOG(INFO)<<"sum = "<< sum;
-            LOG(RESULTS)<<"sum = "<< sum<<"\n";// << std::endl;
+            LOG(RESULTS)<<"sum = "<< sum;// << std::endl;
             
             return 0;
         }
@@ -477,10 +494,16 @@ namespace bear
         // this solution should be a particular solution to the general system
         int solve_dyneq_at_equilibrium(const matrix_d& mat, const vector_d& vec)
         {
-            LOG(MAXDEBUG)<<"running solve dynamic eq";
+            LOG(MAXDEBUG)<<"calling solve_dyneq_at_equilibrium function";
+            
+            
+            LOG(RESULTS)<<" ";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<"#                EQUILIBRIUM CHARGE STATE DISTRIBUTION                   #";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<" ";
             LOG(RESULTS)<<"found a "<<mat.size1()+1<<" level system\n";
             
-            LOG(RESULTS)<<"SOLUTION AT EQUILIBRIUM :\n";
             fA=mat;
             f2nd_member=vec;
             InvertMatrix<matrix_d>(fA,fA_inv);
@@ -491,14 +514,21 @@ namespace bear
             double sum=0.0;
             double FN=1.0;
             vector_d neg_Fi = prod(fA_inv, f2nd_member);// dim N-1
-            
+            double mean_charge(0);
             for(size_t i(0); i< neg_Fi.size(); i++)
             {
+                
+                int temp = static_cast<int>(i)+1;
+                double charge(temp);
+                
                 fEquilibrium_solution(i)=-neg_Fi(i);
+                
                 FN+=neg_Fi(i);
                 sum+=fEquilibrium_solution(i);
+                
+                mean_charge+=charge*fEquilibrium_solution(i);
                 LOG(INFO)<<"F"<<i+1<<"="<<fEquilibrium_solution(i);
-                LOG(RESULTS)<<"F"<<i+1<<"="<<fEquilibrium_solution(i)<<"\n";
+                LOG(RESULTS)<<"F"<<i+1<<"="<<fEquilibrium_solution(i);
             }
             // add the last one (1-sum)
             fEquilibrium_solution(neg_Fi.size())=FN;
@@ -506,8 +536,14 @@ namespace bear
             
             LOG(INFO)<<"F"<< neg_Fi.size()+1<<"="<<fEquilibrium_solution(neg_Fi.size());
             LOG(INFO)<<"sum = "<< sum;
-            LOG(RESULTS)<<"F" << neg_Fi.size() + 1 << "="<<fEquilibrium_solution(neg_Fi.size())<<"\n";
-            LOG(RESULTS)<<"sum = "<< sum<<"\n";
+            LOG(RESULTS)<<"F" << neg_Fi.size() + 1 << "="<<fEquilibrium_solution(neg_Fi.size());
+            LOG(RESULTS)<<"sum = "<< sum;
+            
+            LOG(RESULTS)<<"<q> = "<< mean_charge;
+            
+            print_approximated_solution();
+            
+            
             return 0;
         }
         

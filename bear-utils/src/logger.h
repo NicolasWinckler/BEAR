@@ -31,7 +31,7 @@
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/attr.hpp>
 
-// fairmq
+// bear
 #include "logger_def.h"
 
 // Note : the following types and values must be defined in the included logger_def.h :
@@ -61,6 +61,11 @@ void init_log_file( const std::string& filename,
                     log_op::operation=log_op::GREATER_EQ_THAN,
                     const std::string& id=""
                   );
+void init_new_file( const std::string& filename, 
+                    custom_severity_level threshold, 
+                    log_op::operation op
+                   );
+
 void set_global_log_level(  log_op::operation op=log_op::GREATER_EQ_THAN, 
                             custom_severity_level threshold=SEVERITY_THRESHOLD );
 void set_global_log_level_operation(  log_op::operation op=log_op::GREATER_EQ_THAN, 
@@ -68,7 +73,7 @@ void set_global_log_level_operation(  log_op::operation op=log_op::GREATER_EQ_TH
 // register a global logger (declaration)
 BOOST_LOG_GLOBAL_LOGGER(global_logger, boost::log::sources::severity_logger_mt<custom_severity_level>)
 
-BOOST_LOG_ATTRIBUTE_KEYWORD(fairmq_logger_timestamp, "TimeStamp", boost::posix_time::ptime)
+BOOST_LOG_ATTRIBUTE_KEYWORD(bear_logger_timestamp, "TimeStamp", boost::posix_time::ptime)
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", custom_severity_level)        
 
 
@@ -96,8 +101,6 @@ void init_log_formatter(const boost::log::record_view &view, boost::log::formatt
             << view.attribute_values()["Message"].extract<std::string>();
 }
 
-
-
 // helper macros 
 #define LOG(severity) BOOST_LOG_SEV(global_logger::get(),custom_severity_level::severity)
 #define MQLOG(severity) BOOST_LOG_SEV(global_logger::get(),custom_severity_level::severity)
@@ -110,6 +113,8 @@ void init_log_formatter(const boost::log::record_view &view, boost::log::formatt
 #define INIT_LOG_FILE_FILTER(filename,op,loglevel) init_log_file(filename,custom_severity_level::loglevel,log_op::op);
 //INIT_LOG_FILE_FILTER_MP : add id to log filename for multiprocess
 #define INIT_LOG_FILE_FILTER_MP(filename,op,loglevel,id) init_log_file(filename,custom_severity_level::loglevel,log_op::GREATER_EQ_THAN,id);
-        
+  
+#define INIT_NEW_FILE(filename,op,loglevel) init_new_file(filename,custom_severity_level::loglevel,log_op::op);
+
         
 #endif

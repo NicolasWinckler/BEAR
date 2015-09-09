@@ -108,6 +108,61 @@ void init_log_file(const std::string& filename, custom_severity_level threshold,
     logging::core::get()->add_sink(sink);
 }
 
+
+
+void init_new_file(const std::string& filename, custom_severity_level threshold, log_op::operation op)
+{
+    // add a file text sink with filters but without any formatting
+    std::string formatted_filename(filename);
+    formatted_filename+="_%Y-%m-%d_%H-%M-%S.%N.txt";
+    boost::shared_ptr< sinks::text_file_backend > backend =
+        boost::make_shared< sinks::text_file_backend >
+            (
+            boost::log::keywords::file_name = formatted_filename, 
+            boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+            // rotate at midnight every day
+            boost::log::keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
+            // log collector,
+            // -- maximum total size of the stored log files is 1GB.
+            // -- minimum free space on the drive is 2GB
+            boost::log::keywords::max_size = 1000 * 1024 * 1024,
+            boost::log::keywords::min_free_space = 2000 * 1024 * 1024,
+            boost::log::keywords::auto_flush = true
+            //keywords::time_based_rotation = &is_it_time_to_rotate
+        );
+    typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
+    boost::shared_ptr< sink_t > sink(new sink_t(backend));
+
+    //sink->set_formatter(&init_file_formatter);
+    
+    switch (op)
+    {
+        case log_op::operation::EQUAL :
+            sink->set_filter(severity == threshold);
+            break;
+            
+        case log_op::operation::GREATER_THAN :
+            sink->set_filter(severity > threshold);
+            break;
+            
+        case log_op::operation::GREATER_EQ_THAN :
+            sink->set_filter(severity >= threshold);
+            break;
+            
+        case log_op::operation::LESS_THAN :
+            sink->set_filter(severity < threshold);
+            break;
+            
+        case log_op::operation::LESS_EQ_THAN :
+            sink->set_filter(severity <= threshold);
+            break;
+        
+        default:
+            break;
+    }
+    logging::core::get()->add_sink(sink);
+}
+
 // temporary : to be replaced with c++11 lambda
 void set_global_log_level(log_op::operation op, custom_severity_level threshold )
 {

@@ -16,6 +16,8 @@
 
 namespace bear
 {
+    
+    
     template<typename T>
     class bear_analytic_solution
     {
@@ -51,25 +53,62 @@ namespace bear
             {
                 fGeneral_solution[row]="";
             }
-            
+            LOG(RESULTS)<<" ";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<"#             NON-EQUILIBRIUM CHARGE STATE DISTRIBUTION                  #";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<" ";
             return 0;
         }
         
         
         int form_general_solution(const vector_d& particular_solution )
         {
-            
+            LOG(RESULTS)<<"#computed analytical formulae :";
             for(auto& p : fGeneral_solution)
             {
                 p.second+="+";
-                p.second+=std::to_string(particular_solution(p.first));
+                p.second+=to_string_scientific(particular_solution(p.first));
             }
             
-            LOG(INFO)<<"Final solution :";
+            
+            
+            std::size_t last_key=0;
+            std::size_t first_key=0;
+            if( !fGeneral_solution.empty() )
+            {
+                first_key=fGeneral_solution.begin()->first;
+                last_key=fGeneral_solution.rbegin()->first;
+            }
+            
+            last_key+=1;// because store keys as 0, 1 ... N-2
+            // 8 lvl system -> 0, 1, ... 6, and we print 1, ... 7
+            // need to add the last eq F8= 1 - sum of the other states
+            
+            if(last_key!=0 && !fGeneral_solution.count(last_key))
+            {
+                std::string F_last("1. - (");
+                for(const auto& p : fGeneral_solution)
+                {
+                    if(p.first != first_key)
+                    F_last+=" + ";
+                    F_last+=p.second;
+                    
+                }
+                    F_last+=")";
+                fGeneral_solution[last_key]=F_last;
+            }
+            
+            
+            
+            
             for(const auto& p : fGeneral_solution)
             {
-                LOG(INFO)<<"F"<< p.first+1 <<"(x) = "<< p.second;
+                LOG(RESULTS)<<" ";
+                LOG(RESULTS)<<"F"<< p.first+1 <<"(x) = "<< p.second;
+                LOG(RESULTS)<<" ";
             }
+            
             
             return 0;
         }
@@ -112,7 +151,7 @@ namespace bear
                     if(std::fabs(lambda+1.)<fPRECISON)
                         expLambdaX="exp(-x)";
                     else
-                        expLambdaX="exp(" + std::to_string(lambda)+"*x)";
+                        expLambdaX="exp(" + to_string_scientific(lambda)+"*x)";
                 }
                 
                 if(std::fabs(omega-1.)<fPRECISON)
@@ -129,8 +168,8 @@ namespace bear
                     }
                     else
                     {
-                        sinwx="sin(" + std::to_string(omega) + "*x)";
-                        coswx="cos(" + std::to_string(omega) + "*x)";
+                        sinwx="sin(" + to_string_scientific(omega) + "*x)";
+                        coswx="cos(" + to_string_scientific(omega) + "*x)";
                     }
                 }
                 
@@ -155,19 +194,19 @@ namespace bear
                     std::string C1;
                     std::string C2;
                     
-                    std::string C1xai=std::to_string(C1xai_val);
-                    std::string C1xbi=std::to_string(C1xbi_val);
-                    std::string C2xai=std::to_string(C2xai_val);
-                    std::string C2xbi=std::to_string(C2xbi_val);
+                    std::string C1xai=to_string_scientific(C1xai_val);
+                    std::string C1xbi=to_string_scientific(C1xbi_val);
+                    std::string C2xai=to_string_scientific(C2xai_val);
+                    std::string C2xbi=to_string_scientific(C2xbi_val);
                     
                     
                     
                    
-                    ai=std::to_string(ai_val);
-                    bi=std::to_string(bi_val);
+                    ai=to_string_scientific(ai_val);
+                    bi=to_string_scientific(bi_val);
                     
-                    C1=std::to_string(C1_val);
-                    C2=std::to_string(C2_val);
+                    C1=to_string_scientific(C1_val);
+                    C2=to_string_scientific(C2_val);
                     
                     // 
                     if(std::fabs(C1_val)>fPRECISON)                                                     //                  [if C1!=0]
@@ -256,7 +295,7 @@ namespace bear
                     if(std::fabs(lambda+1.0)<fPRECISON)
                         expLambdaX="exp(-x)";
                     else
-                        expLambdaX="exp(" + std::to_string(lambda)+"*x)";
+                        expLambdaX="exp(" + to_string_scientific(lambda)+"*x)";
                 }
                 
                 for(size_t row(0); row<eigen_mat.size1(); row++)
@@ -269,9 +308,9 @@ namespace bear
                     std::string ai;// ai == P(row=i,ev_index)
                     std::string C1;
                     std::string C1ai;
-                    ai=std::to_string(ai_val);
-                    C1=std::to_string(C1_val);
-                    C1ai=std::to_string(C1ai_val);
+                    ai=to_string_scientific(ai_val);
+                    C1=to_string_scientific(C1_val);
+                    C1ai=to_string_scientific(C1ai_val);
                     
                     if(std::fabs(C1_val)>fPRECISON && std::fabs(ai_val)>fPRECISON)
                     {
@@ -328,9 +367,9 @@ namespace bear
                 
                 // to simplify string solution handle case where lambda and omega = +/- 1
                 
-                expLambdaX="exp(" + std::to_string(lambda)+"*x)";
-                sinwx="sin(" + std::to_string(omega) + "*x)";
-                coswx="cos(" + std::to_string(omega) + "*x)";
+                expLambdaX="exp(" + to_string_scientific(lambda)+"*x)";
+                sinwx="sin(" + to_string_scientific(omega) + "*x)";
+                coswx="cos(" + to_string_scientific(omega) + "*x)";
                         
                 for(size_t row(0); row<eigen_mat.size1(); row++)
                 {
@@ -353,19 +392,19 @@ namespace bear
                     std::string C1;
                     std::string C2;
                     
-                    std::string C1xai=std::to_string(C1xai_val);
-                    std::string C1xbi=std::to_string(C1xbi_val);
-                    std::string C2xai=std::to_string(C2xai_val);
-                    std::string C2xbi=std::to_string(C2xbi_val);
+                    std::string C1xai=to_string_scientific(C1xai_val);
+                    std::string C1xbi=to_string_scientific(C1xbi_val);
+                    std::string C2xai=to_string_scientific(C2xai_val);
+                    std::string C2xbi=to_string_scientific(C2xbi_val);
                     
                     
                     
                    
-                    ai=std::to_string(ai_val);
-                    bi=std::to_string(bi_val);
+                    ai=to_string_scientific(ai_val);
+                    bi=to_string_scientific(bi_val);
                     
-                    C1=std::to_string(C1_val);
-                    C2=std::to_string(C2_val);
+                    C1=to_string_scientific(C1_val);
+                    C2=to_string_scientific(C2_val);
                     
                     // 
                     
@@ -427,7 +466,7 @@ namespace bear
                 
                 // to simplify string solution handle case where lambda and omega = +/- 1
                 
-                expLambdaX="exp(" + std::to_string(lambda)+"*x)";
+                expLambdaX="exp(" + to_string_scientific(lambda)+"*x)";
                 
                 for(size_t row(0); row<eigen_mat.size1(); row++)
                 {
@@ -439,9 +478,9 @@ namespace bear
                     std::string ai;// ai == P(row=i,ev_index)
                     std::string C1;
                     std::string C1ai;
-                    ai=std::to_string(ai_val);
-                    C1=std::to_string(C1_val);
-                    C1ai=std::to_string(C1ai_val);
+                    ai=to_string_scientific(ai_val);
+                    C1=to_string_scientific(C1_val);
+                    C1ai=to_string_scientific(C1ai_val);
                     
                     if(!fGeneral_solution[row].empty())
                         fGeneral_solution[row]+="+";

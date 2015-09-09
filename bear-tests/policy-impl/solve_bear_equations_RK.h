@@ -80,7 +80,7 @@ namespace bear
           //vector_d fGeneral_solution;        // general solution = homogeneous + particular solution
           enum diagonalizable diagonalisation_case;
           variables_map fvarmap;
-          
+          std::vector<double> fApproximated_solution;
     protected:
           std::map<std::size_t, std::shared_ptr<TH1D> > fGeneral_solution;
           //TCanvas* fCanvas;
@@ -98,7 +98,7 @@ namespace bear
                                  fEquilibrium_solution(),
                                  //fGeneral_solution(),
                                  diagonalisation_case(diagonalizable::unknown),
-                                 fvarmap(),fGeneral_solution()
+                                 fvarmap(),fGeneral_solution(), fApproximated_solution()
         {}
         virtual ~solve_bear_equations_RK(){}
         
@@ -143,6 +143,35 @@ namespace bear
                 LOG(RESULTS)<<"F"<<i+1<<"="<<vec.at(i)<<"\n";//<<std::endl;
             
             LOG(RESULTS)<<"sum="<<vec.at(vec.size()-1)<<"\n";//<<std::endl;
+            
+            return 0;
+        }
+        
+        
+        int set_approximated_solution(const std::vector<double>& vec)
+        {
+            fApproximated_solution=vec;
+            if(fApproximated_solution.size()<1)
+                return 1;
+            
+            return 0;
+            
+        }
+        // temp
+        int print_approximated_solution()
+        {
+            if(fApproximated_solution.size()<1)
+                return 1;
+            
+            LOG(RESULTS)<<" ";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<"#  EQUILIBRIUM CHARGE STATE DISTRIBUTION  (1-electron approximation)     #";
+            LOG(RESULTS)<<"##########################################################################";
+            LOG(RESULTS)<<" ";
+            for(int i(0);i<fApproximated_solution.size()-1;i++)
+                LOG(RESULTS)<<"F"<<i+1<<"="<<fApproximated_solution.at(i);
+            LOG(RESULTS)<<"sum="<<fApproximated_solution.at(fApproximated_solution.size()-1);
+            
             
             return 0;
         }
