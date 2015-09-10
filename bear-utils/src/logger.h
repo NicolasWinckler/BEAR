@@ -56,6 +56,7 @@ namespace log_op
 
 // declaration of the init function for the global logger
 void init_log_console();
+void init_log_console(custom_severity_level threshold=SEVERITY_THRESHOLD, log_op::operation op=log_op::GREATER_EQ_THAN);
 void init_log_file( const std::string& filename, 
                     custom_severity_level threshold=SEVERITY_THRESHOLD, 
                     log_op::operation=log_op::GREATER_EQ_THAN,

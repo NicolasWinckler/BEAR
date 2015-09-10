@@ -328,10 +328,10 @@ namespace bear
             }
             
             
-            for(const auto& p : fGeneral_solution)
+            /*for(const auto& p : fGeneral_solution)
             {
                 LOG(INFO)<<"F"<< p.first+1 <<"(x) = "<< p.second;
-            }
+            }*/
             
             
             return 0;

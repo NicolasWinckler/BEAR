@@ -36,7 +36,7 @@ BOOST_LOG_GLOBAL_LOGGER_INIT(global_logger, src::severity_logger_mt)
 {
     src::severity_logger_mt<custom_severity_level> global_logger;
     global_logger.add_attribute("TimeStamp", attrs::local_clock());
-    init_log_console();
+    //init_log_console();
     return global_logger;
 }
 
@@ -50,6 +50,48 @@ void init_log_console()
     // specify the format of the log message 
     sink->set_formatter(&init_log_formatter<tag_console>);
     // add sink to the core
+    logging::core::get()->add_sink(sink);
+}
+
+
+void init_log_console(custom_severity_level threshold, log_op::operation op)
+{
+    // add a text sink
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
+    // add "console" output stream to our sink
+    sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+    // specify the format of the log message 
+    sink->set_formatter(&init_log_formatter<tag_console>);
+    // add sink to the core
+    
+    switch (op)
+    {
+        case log_op::operation::EQUAL :
+            sink->set_filter(severity == threshold);
+            break;
+            
+        case log_op::operation::GREATER_THAN :
+            sink->set_filter(severity > threshold);
+            break;
+            
+        case log_op::operation::GREATER_EQ_THAN :
+            sink->set_filter(severity >= threshold);
+            break;
+            
+        case log_op::operation::LESS_THAN :
+            sink->set_filter(severity < threshold);
+            break;
+            
+        case log_op::operation::LESS_EQ_THAN :
+            sink->set_filter(severity <= threshold);
+            break;
+        
+        default:
+            break;
+    }
+    
+    
     logging::core::get()->add_sink(sink);
 }
 
@@ -114,7 +156,7 @@ void init_new_file(const std::string& filename, custom_severity_level threshold,
 {
     // add a file text sink with filters but without any formatting
     std::string formatted_filename(filename);
-    formatted_filename+="_%Y-%m-%d_%H-%M-%S.%N.txt";
+    formatted_filename+=".%N.txt";
     boost::shared_ptr< sinks::text_file_backend > backend =
         boost::make_shared< sinks::text_file_backend >
             (

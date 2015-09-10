@@ -336,14 +336,14 @@ namespace bear
             for(size_t i(0); i<fD.size(); i++)
             {
                 ev_map.insert(std::make_pair(i,fD(i)));
-                LOG(INFO)<<"lambda_"<<i+1<<"="<<fD(i).real()<<" + "<<fD(i).imag()<<" i";
+                LOG(DEBUG)<<"lambda_"<<i+1<<"="<<fD(i).real()<<" + "<<fD(i).imag()<<" i";
             }
             
             // Print 
-            LOG(INFO)<<"Print complex eigen vector matrix";
-            std::cout<<fEigen_mat;
-            LOG(INFO)<<"Print complex eigen vector invert matrix";
-            std::cout<<fEigen_mat_inv;
+            LOG(DEBUG)<<"Print complex eigen vector matrix";
+            LOG(DEBUG)<<fEigen_mat;
+            LOG(DEBUG)<<"Print complex eigen vector invert matrix";
+            LOG(DEBUG)<<fEigen_mat_inv;
             for(const auto& p : ev_map)
                 LOG(MAXDEBUG)<<"Map("<<p.first<<")="<<p.second.real()<<" + "<<p.second.imag()<<" i";
             
@@ -377,7 +377,7 @@ namespace bear
             matrix_d P_R(dim,dim);
             matrix_d P_R_inv(dim,dim);
             // fill complex eigenvectors part (complex eigenvectors pairs)
-            LOG(INFO)<<"COMPLEX CONJUGATES = "<<complex_conjugates.size();
+            LOG(DEBUG)<<"COMPLEX CONJUGATES = "<<complex_conjugates.size();
             for(const auto& p : complex_conjugates)
             {
                 size_t index=0;
@@ -390,7 +390,7 @@ namespace bear
                 }
             }
             // fill real eigenvectors part (real eigenvalues)
-            LOG(INFO)<<"ev_map = "<<ev_map.size();
+            LOG(DEBUG)<<"ev_map = "<<ev_map.size();
             for(const auto& p : ev_map)
             {
                 for(size_t i(0); i<fEigen_mat.size1(); i++)
@@ -413,7 +413,8 @@ namespace bear
                 else
                     F0(i)=1.0;
             
-            
+            LOG(INFO)<<"NON EQUILIBRIUM CHARGE STATE DISTRIBUTION :";
+            LOG(INFO)<<"Initial conditions :";
             for(size_t i(0); i<F0.size(); i++)
             {
                 LOG(INFO)<<"F"<<i+1<<" (x=0) = "<<F0(i);
@@ -429,14 +430,14 @@ namespace bear
             unknown_coef=prod(P_R_inv,vec_temp);
             for(size_t i(0); i<unknown_coef.size(); i++)
             {
-                LOG(INFO)<<"C"<<i+1<<" = "<<unknown_coef(i);
+                LOG(DEBUG)<<"C"<<i+1<<" = "<<unknown_coef(i);
             }
             
-            LOG(INFO)<<"PRINT P_R";
-            std::cout<<P_R;
+            LOG(DEBUG)<<"PRINT P_R";
+            LOG(DEBUG)<<P_R;
             
-            LOG(INFO)<<"PRINT P_R invert";
-            std::cout<<P_R_inv;
+            LOG(DEBUG)<<"PRINT P_R invert";
+            LOG(DEBUG)<<P_R_inv;
             
             //////////////////////////////////////////////////////////////////////////////////////
             // FORM SOLUTIONS INTO STRING, AND STORE the STRING formulae
@@ -504,7 +505,7 @@ namespace bear
             LOG(RESULTS)<<"##########################################################################";
             LOG(RESULTS)<<" ";
             LOG(RESULTS)<<"found a "<<mat.size1()+1<<" level system\n";
-            
+            LOG(INFO)<<"-EQUILIBRIUM CHARGE STATE DISTRIBUTION :";
             fA=mat;
             f2nd_member=vec;
             InvertMatrix<matrix_d>(fA,fA_inv);
@@ -528,20 +529,20 @@ namespace bear
                 sum+=fEquilibrium_solution(i);
                 
                 mean_charge+=charge*fEquilibrium_solution(i);
-                LOG(INFO)<<"F"<<i+1<<"="<<fEquilibrium_solution(i);
-                LOG(RESULTS)<<"F"<<i+1<<"="<<fEquilibrium_solution(i);
+                LOG(INFO)<<"F"<<i+1<<" = "<<fEquilibrium_solution(i);
+                LOG(RESULTS)<<"F"<<i+1<<" = "<<fEquilibrium_solution(i);
             }
             // add the last one (1-sum)
             fEquilibrium_solution(neg_Fi.size())=FN;
             sum+=FN;
             
-            LOG(INFO)<<"F"<< neg_Fi.size()+1<<"="<<fEquilibrium_solution(neg_Fi.size());
+            LOG(INFO)<<"F"<< neg_Fi.size()+1<<" = "<<fEquilibrium_solution(neg_Fi.size());
             LOG(INFO)<<"sum = "<< sum;
-            LOG(RESULTS)<<"F" << neg_Fi.size() + 1 << "="<<fEquilibrium_solution(neg_Fi.size());
+            LOG(RESULTS)<<"F" << neg_Fi.size() + 1 << " = "<<fEquilibrium_solution(neg_Fi.size());
             LOG(RESULTS)<<"sum = "<< sum;
             
             LOG(RESULTS)<<"<q> = "<< mean_charge;
-            
+            LOG(INFO)<<"<q> = "<< mean_charge;
             print_approximated_solution();
             
             

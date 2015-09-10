@@ -122,7 +122,7 @@ namespace bear
         // Description which is printed in help command line
         options_description fVisible_options;
 
-        int fVerboseLvl;
+        std::string fVerboseLvl;
         bool fUse_cfgFile;
         path fConfig_file_path;
         virtual int notifySwitch_options();

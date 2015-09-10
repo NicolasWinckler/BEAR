@@ -290,7 +290,7 @@ namespace bear
                 return 1;
         }
 
-        int verbose=fvarmap["verbose"].template as<int>();
+        std::string verbose=fvarmap["verbose"].template as<std::string>();
         LOG(DEBUG) << "printing generated matrix to process : ";
         //if(logger::DEBUG>=verbose)
         //    std::cout << fMat << std::endl;

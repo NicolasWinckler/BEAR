@@ -29,14 +29,14 @@ namespace bear
                             fCmdline_options("Command line options"), 
                             fConfig_file_options("Configuration file options"), 
                             fVisible_options("User options"),
-                            fVerboseLvl(0), fUse_cfgFile(false), fConfig_file_path()
+                            fVerboseLvl("RESULTS"), fUse_cfgFile(false), fConfig_file_path()
     {
         // //////////////////////////////////
         // define generic options
         fGenericDesc.add_options()
             ("help,h", "produce help")
             ("version,v", "print version")
-            ("verbose", po::value<int>(&fVerboseLvl)->default_value(0), "Verbosity level : \n"
+            ("verbose", po::value<std::string>(&fVerboseLvl)->default_value("RESULTS"), "Verbosity level : \n"
                                                                         "  0=DEBUG \n"
                                                                         "  1=INFO \n"
                                                                         "  2=WARN \n"

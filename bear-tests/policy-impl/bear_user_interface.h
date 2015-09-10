@@ -114,7 +114,7 @@ namespace bear
                 
             }
             
-            int verbose=fvarmap["verbose"].as<int>();
+            std::string verbose=fvarmap["verbose"].as<std::string>();
             
             fs::path input=fvarmap["input-file"].template as<fs::path>();
             std::string filename=input.stem().string();
@@ -124,9 +124,21 @@ namespace bear
             
             //SET_LOGGER_LEVEL(verbose);
             //SET_LOG_LEVEL(MAXDEBUG);
-            bear::severity_level lvl = static_cast<bear::severity_level>(verbose);
-            set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map["INFO"]);
-            INIT_LOG_FILE_FILTER("results_log_test",EQUAL,RESULTS);
+            //bear::severity_level lvl = static_cast<bear::severity_level>(verbose);
+            
+            
+            if(fSeverity_map.count(verbose))
+            {
+                init_log_console(fSeverity_map.at(verbose),log_op::operation::GREATER_EQ_THAN);
+                //set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map.at(verbose));
+            }
+            else
+            {
+                init_log_console(fSeverity_map.at("INFO"),log_op::operation::GREATER_EQ_THAN);
+                //set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map.at("RESULTS"));
+            }
+            
+            INIT_LOG_FILE_FILTER("results_log_test",GREATER_EQ_THAN,DEBUG);
             INIT_NEW_FILE(output,EQUAL,RESULTS);
             
             LOG(INFO)<<"Print output to : "<<output;
