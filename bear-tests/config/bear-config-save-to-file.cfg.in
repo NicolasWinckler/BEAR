@@ -1,11 +1,6 @@
 #######################################
 
 #######################################
-# input options
-
-#input-file = @CMAKE_SOURCE_DIR@/data/input/input_file_example_8lvl-system.txt
-
-#######################################
 # output options
 
 plot = false

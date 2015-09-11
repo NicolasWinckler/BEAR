@@ -13,6 +13,7 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
+#include "def.h"
 
 namespace bear
 {
@@ -33,6 +34,7 @@ namespace bear
         
         double fPRECISON;
         bool fSimple_print;
+        std::shared_ptr<bear_summary> fSummary;
     protected:
         std::map<std::size_t, std::string> fGeneral_solution;
         double fUnit_convertor=1.;
@@ -53,18 +55,18 @@ namespace bear
             {
                 fGeneral_solution[row]="";
             }
-            LOG(RESULTS)<<" ";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<"#             NON-EQUILIBRIUM CHARGE STATE DISTRIBUTION                  #";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<" ";
+            
             return 0;
         }
         
-        
+        int init_summary(std::shared_ptr<bear_summary> const& summary) 
+        {
+            fSummary = summary;
+            return 0;
+        }
         int form_general_solution(const vector_d& particular_solution )
         {
-            LOG(RESULTS)<<"#computed analytical formulae :";
+            
             for(auto& p : fGeneral_solution)
             {
                 p.second+="+";
@@ -99,15 +101,10 @@ namespace bear
                 fGeneral_solution[last_key]=F_last;
             }
             
+            // Copy final solution
+            fSummary->analytical_solutions=fGeneral_solution;
             
             
-            
-            for(const auto& p : fGeneral_solution)
-            {
-                LOG(RESULTS)<<" ";
-                LOG(RESULTS)<<"F"<< p.first+1 <<"(x) = "<< p.second;
-                LOG(RESULTS)<<" ";
-            }
             
             
             return 0;

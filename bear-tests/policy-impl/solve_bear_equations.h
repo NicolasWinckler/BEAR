@@ -13,26 +13,26 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-#include "options_manager.h"
-#include "matrix_inverse.hpp"
-#include "storage_adaptors.hpp"
-#include "matrix_diagonalization.h"
-
-#include "def.h"
-#include "bear_analytic_solution.h"
-
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
 #include <tuple>
 #include <algorithm>
 #include <vector>
 
+#include "def.h"
+#include "options_manager.h"
+#include "matrix_inverse.hpp"
+#include "storage_adaptors.hpp"
+#include "matrix_diagonalization.h"
+#include "bear_analytic_solution.h"
+
+
+
 namespace bear
 {
-    void remove_conjugates_from_map(std::map<size_t, std::complex<double> >& map, std::vector<std::tuple<size_t,size_t,std::complex<double> > >& comp_ev_container)
+    void remove_conjugates_from_map(std::map<size_t, std::complex<double> >& map, 
+                                    std::vector<std::tuple<size_t,size_t,std::complex<double> > >& comp_ev_container)
     {
         if(map.size()>0)
         {
@@ -63,7 +63,7 @@ namespace bear
     
     
     
-    template<typename T, typename U=bear_analytic_solution<T> >
+    template<typename T=double, typename U=bear_analytic_solution<T> >
     class solve_bear_equations : protected U
     {
         public:
@@ -83,7 +83,7 @@ namespace bear
           typedef ublas::vector<std::complex<data_type> >                         vector_c;
           typedef ublas::matrix<data_type,ublas::column_major>                    matrix_d;
           typedef ublas::matrix<std::complex<data_type>,ublas::column_major>      matrix_c;
-          typedef po::variables_map                                          variables_map;
+
           //  equation to solve : dF/dx = AF + g <=> dF/dx = P D P^1 F + g
           matrix_d fA;                       // A
           matrix_d fA_inv;                   // A^-1
@@ -101,7 +101,7 @@ namespace bear
           enum diagonalizable diagonalisation_case;
           variables_map fvarmap;
           std::vector<double> fApproximated_solution;
-          
+          std::shared_ptr<bear_summary> fSummary;
         protected:
           using solution_type::fGeneral_solution;
           using solution_type::fUnit_convertor;
@@ -132,9 +132,15 @@ namespace bear
             
             return 0;
         }
+        int init_summary(std::shared_ptr<bear_summary> const& summary) 
+        {
+            fSummary = summary;
+            bear_analytic_solution<T>::init_summary(summary);
+            return 0;
+        }
         
         // main function 
-        int solve(const matrix_d& mat, const vector_d& vec)
+        int solve(const matrix_d& mat, const vector_d& vec, const vector_d& initial_condition)
         {
             try
             {
@@ -151,8 +157,11 @@ namespace bear
                 }
                 
                 
-                solve_homogeneous_system(mat,vec);
-                
+                if(solve_homogeneous_system(mat,vec,initial_condition))
+                {
+                    LOG(INFO)<<"Program will now exit";
+                    return 1;
+                }
                 
             }
             catch(std::exception& e)
@@ -177,23 +186,21 @@ namespace bear
         {
             if(fApproximated_solution.size()<1)
                 return 1;
+            LOG(INFO)<<" ";
+            LOG(INFO)<<"EQUILIBRIUM CHARGE STATE DISTRIBUTION  (1-electron approximation)";
             
-            LOG(RESULTS)<<" ";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<"#  EQUILIBRIUM CHARGE STATE DISTRIBUTION  (1-electron approximation)     #";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<" ";
             double mean_charge(0);
             for(int i(0);i<fApproximated_solution.size()-1;i++)
             {
-                double q(i+1);
+                fSummary->approximated_solutions[i] = fApproximated_solution.at(i);
+                double q=fSummary->F_index_map.at(i);
                 mean_charge+=q*fApproximated_solution.at(i);
-                LOG(RESULTS)<<"F"<<i+1<<"="<<fApproximated_solution.at(i);
+                LOG(INFO)<<"F"<<fSummary->F_index_map.at(i)<<"="<<fApproximated_solution.at(i);
                 
             }
-            LOG(RESULTS)<<"sum="<<fApproximated_solution.at(fApproximated_solution.size()-1);
+            LOG(INFO)<<"sum="<<fApproximated_solution.at(fApproximated_solution.size()-1);
             
-            LOG(RESULTS)<<"<q>="<<mean_charge;
+            LOG(INFO)<<"<q>="<<mean_charge;
             return 0;
         }
         
@@ -206,7 +213,7 @@ namespace bear
             return 0;
         }
         
-        int solve_homogeneous_system(const matrix_d& mat, const vector_d& vec)
+        int solve_homogeneous_system(const matrix_d& mat, const vector_d& vec, const vector_d& initial_condition)
         {
             
             fA=mat;
@@ -271,26 +278,27 @@ namespace bear
             
             switch (diagonalisation_case)
             {
+                
                 case diagonalizable::in_R : 
-                    solve_A_diagonalizable_in_R();
+                    return solve_A_diagonalizable_in_R(initial_condition);
                     break;
                     
+                    //
                 case diagonalizable::in_C : 
-                    solve_A_diagonalizable_in_C();
-                    break;
+                    return solve_A_diagonalizable_in_C(initial_condition);
+                    //break;
                     
+                    //not yet implemented
                 case diagonalizable::no : 
-                    solve_A_triangularizable_in_C();
+                    solve_A_triangularizable_in_C(initial_condition);
                     break;
                     
                 case diagonalizable::unknown :
                     LOG(ERROR)<<"Could not identify the matrix decomposition method to use.";
-                    LOG(ERROR)<<"Program will now exit";
                     return 1;
                             
                 default:
                     LOG(ERROR)<<"Could not identify the matrix decomposition method to use.";
-                    LOG(ERROR)<<"Program will now exit";
                     return 1;
             }
             
@@ -302,7 +310,7 @@ namespace bear
         
         ////////////////////////////////////////////////////////////////////////////////////
         // solve equation - case : A diagonalizable in R
-        int solve_A_diagonalizable_in_R()
+        int solve_A_diagonalizable_in_R(const vector_d& initial_condition)
         {
             /*LOG(DEBUG)<<"Matrix can be diagonalized in R";
             vector_c F0(fEigen_mat_inv.size1());// dim = N-1
@@ -314,13 +322,14 @@ namespace bear
             }
             fConstant_set = prod(fEigen_mat_inv,F0);
             */
-            solve_A_diagonalizable_in_C();//temp
+            if(solve_A_diagonalizable_in_C(initial_condition))
+                return 1;//temp
             return 0;
         }
         
         ////////////////////////////////////////////////////////////////////////////////////
         // solve equation - case : A diagonalizable in C
-        int solve_A_diagonalizable_in_C()
+        int solve_A_diagonalizable_in_C(const vector_d& initial_condition)
         {
             //////////////////////////////////////////
             // some declarations
@@ -405,21 +414,39 @@ namespace bear
             InvertMatrix<matrix_d>(P_R,P_R_inv);
             vector_d unknown_coef(dim);
             vector_d F0(dim);
-            
-            size_t non_zero_coord=0;
+            LOG(DEBUG)<<"dim="<<dim;
+
             for(size_t i(0); i<F0.size(); i++)
-                if(non_zero_coord!=i)
-                    F0(i)=0.0;
-                else
-                    F0(i)=1.0;
+                F0(i)=initial_condition(i);
             
-            LOG(INFO)<<"NON EQUILIBRIUM CHARGE STATE DISTRIBUTION :";
+            LOG(INFO)<<" ";
             LOG(INFO)<<"Initial conditions :";
-            for(size_t i(0); i<F0.size(); i++)
+            double max_initial_cond=0.;
+            size_t index_max=0;
+            
+            double sum_init_cond=0.;
+            for(size_t i(0); i<initial_condition.size(); i++)
             {
-                LOG(INFO)<<"F"<<i+1<<" (x=0) = "<<F0(i);
+                LOG(INFO)   <<"F"
+                            << fSummary->F_index_map.at(i)
+                            <<" (x=0) = "
+                            <<initial_condition(i);
+                sum_init_cond+=initial_condition(i);
+                if(initial_condition(i)>max_initial_cond)
+                {
+                    max_initial_cond=initial_condition(i);
+                    index_max=i;
+                }
+                
+            }
+            if(sum_init_cond!=1.)
+            {
+                LOG(ERROR)<<"Provided initial conditions is not normalized : sum = "<< sum_init_cond << " different from 1.";
+                LOG(ERROR)<<"Correct initial conditions are required to compute the non-equilibrium chage state distributions.";
+                return 1;
             }
             
+            fSummary->max_fraction_index=index_max;
             vector_d vec_temp(F0.size());
             
             for(size_t k(0);k<F0.size();k++)
@@ -442,9 +469,12 @@ namespace bear
             //////////////////////////////////////////////////////////////////////////////////////
             // FORM SOLUTIONS INTO STRING, AND STORE the STRING formulae
             // into fGeneral_solution map container
-            
+            LOG(DEBUG)<<"FORM SOLUTIONS INTO STRING, AND STORE the STRING formulae";
+            LOG(DEBUG)<<"solution_type::init";
             solution_type::init(fEigen_mat);
+            LOG(DEBUG)<<"solution_type::form_homogeneous_solution";
             solution_type::form_homogeneous_solution(fEigen_mat,unknown_coef,ev_map,complex_conjugates);
+            LOG(DEBUG)<<"solution_type::form_general_solution";
             solution_type::form_general_solution(fEquilibrium_solution);
             
             
@@ -456,11 +486,12 @@ namespace bear
         
         ////////////////////////////////////////////////////////////////////////////////////
         // solve equation - case : A non-diagonalizable -> triangularizable in C for sure
-        int solve_A_triangularizable_in_C()
+        int solve_A_triangularizable_in_C(const vector_d& initial_condition)
         {
-            LOG(DEBUG)<<"Matrix cannot be diagonalized neither in R nor C.";
-            LOG(DEBUG)<<"A triangularization will be performed.";
-            return 0;
+            LOG(INFO)<<"Matrix cannot be diagonalized neither in R nor C.";
+            LOG(INFO)<<"A triangularization in C will be performed.";
+            LOG(INFO)<<"Triangularization method not implemented yet.";
+            return 1;
         }
         
         
@@ -473,19 +504,19 @@ namespace bear
             LOG(MAXDEBUG)<<"running solve static eq";
             fA=mat;
             InvertMatrix<matrix_d>(fA,fA_inv);
-            LOG(RESULTS)<<" ";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<"#                EQUILIBRIUM CHARGE STATE DISTRIBUTION                   #";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<" ";
+            LOG(DEBUG)<<" ";
+            LOG(DEBUG)<<"##########################################################################";
+            LOG(DEBUG)<<"#                EQUILIBRIUM CHARGE STATE DISTRIBUTION                   #";
+            LOG(DEBUG)<<"##########################################################################";
+            LOG(DEBUG)<<" ";
             double sum=0.0;
             for(size_t i(0);i<fA_inv.size1();i++)
             {
-                LOG(RESULTS)<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1);// << std::endl;
+                LOG(DEBUG)<<"F"<<i+1<<"="<<fA_inv(i,fA_inv.size1()-1);// << std::endl;
                 sum+=fA_inv(i,fA_inv.size1()-1);
             }
             
-            LOG(RESULTS)<<"sum = "<< sum;// << std::endl;
+            LOG(DEBUG)<<"sum = "<< sum;// << std::endl;
             
             return 0;
         }
@@ -499,13 +530,8 @@ namespace bear
             LOG(MAXDEBUG)<<"calling solve_dyneq_at_equilibrium function";
             
             
-            LOG(RESULTS)<<" ";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<"#                EQUILIBRIUM CHARGE STATE DISTRIBUTION                   #";
-            LOG(RESULTS)<<"##########################################################################";
-            LOG(RESULTS)<<" ";
-            LOG(RESULTS)<<"found a "<<mat.size1()+1<<" level system\n";
-            LOG(INFO)<<"-EQUILIBRIUM CHARGE STATE DISTRIBUTION :";
+            LOG(INFO)<<" ";
+            LOG(INFO)<<"EQUILIBRIUM CHARGE STATE DISTRIBUTION :";
             fA=mat;
             f2nd_member=vec;
             InvertMatrix<matrix_d>(fA,fA_inv);
@@ -520,7 +546,7 @@ namespace bear
             for(size_t i(0); i< neg_Fi.size(); i++)
             {
                 
-                int temp = static_cast<int>(i)+1;
+                int temp = fSummary->F_index_map.at(i);
                 double charge(temp);
                 
                 fEquilibrium_solution(i)=-neg_Fi(i);
@@ -529,19 +555,19 @@ namespace bear
                 sum+=fEquilibrium_solution(i);
                 
                 mean_charge+=charge*fEquilibrium_solution(i);
-                LOG(INFO)<<"F"<<i+1<<" = "<<fEquilibrium_solution(i);
-                LOG(RESULTS)<<"F"<<i+1<<" = "<<fEquilibrium_solution(i);
+                LOG(INFO)<<"F"<<fSummary->F_index_map.at(i)<<" = "<<fEquilibrium_solution(i);
+                fSummary->equilibrium_solutions[i] = fEquilibrium_solution(i);
             }
             // add the last one (1-sum)
             fEquilibrium_solution(neg_Fi.size())=FN;
             sum+=FN;
             
-            LOG(INFO)<<"F"<< neg_Fi.size()+1<<" = "<<fEquilibrium_solution(neg_Fi.size());
-            LOG(INFO)<<"sum = "<< sum;
-            LOG(RESULTS)<<"F" << neg_Fi.size() + 1 << " = "<<fEquilibrium_solution(neg_Fi.size());
-            LOG(RESULTS)<<"sum = "<< sum;
+            fSummary->equilibrium_solutions[neg_Fi.size()]=FN;
+            size_t  last_index = neg_Fi.size()+1;
             
-            LOG(RESULTS)<<"<q> = "<< mean_charge;
+            LOG(INFO)<<"F"<< fSummary->F_index_map.at(neg_Fi.size())<<" = "<<fEquilibrium_solution(neg_Fi.size());
+            LOG(INFO)<<"sum = "<< sum;
+            
             LOG(INFO)<<"<q> = "<< mean_charge;
             print_approximated_solution();
             

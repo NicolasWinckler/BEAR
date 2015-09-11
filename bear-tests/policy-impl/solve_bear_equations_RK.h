@@ -81,6 +81,7 @@ namespace bear
           enum diagonalizable diagonalisation_case;
           variables_map fvarmap;
           std::vector<double> fApproximated_solution;
+          std::shared_ptr<bear_summary> fSummary;
     protected:
           std::map<std::size_t, std::shared_ptr<TH1D> > fGeneral_solution;
           //TCanvas* fCanvas;
@@ -111,13 +112,17 @@ namespace bear
             output+="/Results_";
             output+=filename;
             LOG(INFO)<<"Print output to : "<<output;
-
+            fSummary->filename=output;
             LOG(RESULTS)<<"Input file :"<<filename<<"\n";
             return 0;
         }
-        
+        int init_summary(std::shared_ptr<bear_summary> const& summary) 
+        {
+            fSummary = summary;
+            return 0;
+        }
         // main function 
-        int solve(const matrix_d& mat, const vector_d& vec)
+        int solve(const matrix_d& mat, const vector_d& vec, const vector_d& initial_condition)
         {
             try
             {

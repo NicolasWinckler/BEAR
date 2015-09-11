@@ -95,9 +95,9 @@ void init_log_formatter(const boost::log::record_view &view, boost::log::formatt
         os<<"\033[0m";
     
     os      << "]"
-            << "[" 
+            //<< "[" 
             << view.attribute_values()["Severity"].extract<custom_severity_level,T>()
-            << "] "
+            //<< "] "
             //<< " - " 
             << view.attribute_values()["Message"].extract<std::string>();
 }

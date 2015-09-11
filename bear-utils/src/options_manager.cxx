@@ -29,14 +29,14 @@ namespace bear
                             fCmdline_options("Command line options"), 
                             fConfig_file_options("Configuration file options"), 
                             fVisible_options("User options"),
-                            fVerboseLvl("RESULTS"), fUse_cfgFile(false), fConfig_file_path()
+                            fVerboseLvl("RESULTS"), fUse_cfgFile(false), fConfig_file_path(), fVisible_key_map()
     {
         // //////////////////////////////////
         // define generic options
         fGenericDesc.add_options()
             ("help,h", "produce help")
             ("version,v", "print version")
-            ("verbose", po::value<std::string>(&fVerboseLvl)->default_value("RESULTS"), "Verbosity level : \n"
+            ("verbose", po::value<std::string>(&fVerboseLvl)->default_value("INFO"), "Verbosity level : \n"
                                                                         "  0=DEBUG \n"
                                                                         "  1=INFO \n"
                                                                         "  2=WARN \n"
@@ -61,6 +61,8 @@ namespace bear
         fCmdline_options.add(optdesc);
         if(visible)
             fVisible_options.add(optdesc);
+        register_parsedOptions_to_print(optdesc,visible);
+
         return 0;
     }
 
@@ -73,6 +75,7 @@ namespace bear
         fConfig_file_options.add(optdesc);
         if(visible)
             fVisible_options.add(optdesc);
+        register_parsedOptions_to_print(optdesc,visible);
         return 0;
     }
 
@@ -296,6 +299,15 @@ namespace bear
                         val_str = variable_toString< std::vector<double> >(fvarmap[key]);
                         return val_str;
                     }
+                    
+                    
+                    if(auto q = boost::any_cast< bool >(&value ))
+                    {
+                        val_str = variable_toString< bool >(fvarmap[key]);
+                        
+                        
+                        return val_str;
+                    }
 
 
                 }
@@ -405,16 +417,33 @@ namespace bear
             std::string empty_str;
             key_str=p.first;
             std::tie(val_str,typeInfo_str,default_str,empty_str)=p.second;
-            LOG(INFO) << std::setfill (' ')<< std::setw(maxlen_1st)<<std::left 
-                        << p.first << " = " 
-                        << std::setw(maxlen_2nd) 
-                        << val_str 
-                        << std::setw(maxlen_TypeInfo) 
-                        << typeInfo_str 
-                        << std::setw(maxlen_default)
-                        << default_str 
-                        << std::setw(maxlen_empty)
-                        << empty_str;
+            
+            std::ostringstream os;
+            os  << std::setfill (' ')
+                << std::setw(maxlen_1st)
+                << std::left 
+                << p.first << " = " 
+                << std::setw(maxlen_2nd) 
+                << val_str 
+                << std::setw(maxlen_TypeInfo) 
+                << typeInfo_str 
+                << std::setw(maxlen_default)
+                << default_str 
+                << std::setw(maxlen_empty)
+                << empty_str;
+            
+            if(fVisible_key_map.count(key_str))
+            {
+                if(fVisible_key_map.at(key_str))
+                    LOG(INFO) << os.str();
+                else
+                    LOG(DEBUG) << os.str();
+            }
+            else
+            {
+                LOG(WARN) << os.str();// for the unregistered option keys
+            }
+            
         }
         LOG(INFO)<<std::setfill ('*') << std::setw (total_len+3)<<"*";// +3 for " = "
         return 0;
@@ -528,6 +557,12 @@ namespace bear
                 return std::make_tuple(val_str,std::string("  [Type=size_t]"),defaulted_val,empty_val);
             }
 
+            if(auto q = boost::any_cast< bool >(&value))
+            {
+                std::string val_str = variable_toString< bool >(var_val);
+                return std::make_tuple(val_str,std::string("  [Type=bool]"),defaulted_val,empty_val);
+            }
+            
             // if we get here, the type is not supported return unknown info
             return std::make_tuple(std::string("Unknown value"), std::string("  [Type=Unknown]"),defaulted_val,empty_val);
         }

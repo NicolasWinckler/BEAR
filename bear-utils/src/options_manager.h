@@ -31,7 +31,7 @@
 
 // bear
 #include "logger.h"
-
+#include "def.h"
 namespace bear
 {
     template<class T>
@@ -41,8 +41,8 @@ namespace bear
         return os;
     }
 
-    namespace po = boost::program_options;
-    namespace fs = boost::filesystem;
+    //namespace po = boost::program_options;
+    //namespace fs = boost::filesystem;
     class options_manager
     {
         typedef po::options_description                         options_description;
@@ -104,7 +104,14 @@ namespace bear
 
         virtual int print_options();
         int print_help() const;
+        int init_summary(std::shared_ptr<bear_summary> const& summary) 
+        {
+            fSummary = summary;
+            return 0;
+        }
 
+        
+        
     protected:
         // options container
         variables_map fvarmap;
@@ -125,6 +132,10 @@ namespace bear
         std::string fVerboseLvl;
         bool fUse_cfgFile;
         path fConfig_file_path;
+        
+        std::map<std::string,bool> fVisible_key_map;
+        
+        
         virtual int notifySwitch_options();
 
         // update_varMap() and replace() --> helper functions to modify the value of variable map after calling po::store
@@ -140,7 +151,33 @@ namespace bear
             vm[opt].value() = boost::any(val);
         }
 
+        int register_parsedOptions_to_print(const options_description& descriptions, bool visible=true)
+        {
+            LOG(MAXDEBUG)<<"register keys ";
+            auto vec_opt_shptr = descriptions.options();
+            for(const auto& p : vec_opt_shptr)
+            {
+                std::string key = p->canonical_display_name();
+                if(!fVisible_key_map.count(key))
+                {
+                    LOG(MAXDEBUG)<<"register key "<< key <<" from print_option() at level>=INFO";
+                    fVisible_key_map[key] = visible;
+                }
+                else
+                {
+                    LOG(MAXDEBUG)<<"key "<< key <<" already registered to print_option() at level>=INFO";
+                    
+                }
+                
+            }
+            
+            return 0;
+        }
+        
+        
+        
     private:
+        std::shared_ptr<bear_summary> fSummary;
         // /////////////////////////////////////////////
         // Methods below are helper functions used in the print_options method
         typedef std::tuple<std::string, std::string,std::string, std::string> VarValInfo_t;
@@ -153,6 +190,17 @@ namespace bear
         {
             auto& value = var_val.value();
             std::ostringstream ostr;
+            
+            if (auto q = boost::any_cast<bool>(&value))
+            {
+                std::string val_str;
+                if(*q)
+                    val_str="true";
+                else
+                    val_str="false";
+                return val_str;
+            }
+            
             if (auto q = boost::any_cast<T>(&value))
             {
                 ostr << *q;

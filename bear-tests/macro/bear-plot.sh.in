@@ -7,7 +7,7 @@ if [ "$#" -gt 0 ]; then
 fi
 
 SOLVE_EQ="runSolveDynEqRoot$opt"
-SOLVE_EQ+=" --config @CMAKE_SOURCE_DIR@/data/config/bear-config-steady.cfg"
+SOLVE_EQ+=" --config @CMAKE_SOURCE_DIR@/data/config/bear-config-no-save-to-file.cfg"
 
 @CMAKE_BINARY_DIR@/bin/$SOLVE_EQ 
 

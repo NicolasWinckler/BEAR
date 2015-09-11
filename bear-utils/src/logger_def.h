@@ -43,14 +43,14 @@ namespace bear
     static const std::array<std::string, 8> g_LogSeverityLevelString
     {
         { 
-            "MAXDEBUG",
-            "DEBUG", 
-            "RESULTS",
-            "INFO", 
-            "WARN", 
-            "ERROR", 
-            "STATE", 
-            "NOLOG" 
+            "[MAXDEBUG]",
+            "[DEBUG]   ", 
+            "[RESULTS] ",
+            "[INFO]    ", 
+            "[WARN]    ", 
+            "[ERROR]   ", 
+            "[STATE]   ", 
+            "[NOLOG]   " 
         }
     };
 

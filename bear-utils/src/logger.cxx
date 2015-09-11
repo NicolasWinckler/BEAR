@@ -40,10 +40,11 @@ BOOST_LOG_GLOBAL_LOGGER_INIT(global_logger, src::severity_logger_mt)
     return global_logger;
 }
 
+typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
 void init_log_console()
 {
     // add a text sink
-    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    
     boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
     // add "console" output stream to our sink
     sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
@@ -57,7 +58,8 @@ void init_log_console()
 void init_log_console(custom_severity_level threshold, log_op::operation op)
 {
     // add a text sink
-    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    //typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    logging::core::get()->remove_all_sinks();
     boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
     // add "console" output stream to our sink
     sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
@@ -97,6 +99,7 @@ void init_log_console(custom_severity_level threshold, log_op::operation op)
 
 void init_log_file(const std::string& filename, custom_severity_level threshold, log_op::operation op, const std::string& id)
 {
+    /*
     // add a text sink
     std::string formatted_filename(filename);
     formatted_filename+=id;
@@ -118,6 +121,12 @@ void init_log_file(const std::string& filename, custom_severity_level threshold,
         );
     typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
     boost::shared_ptr< sink_t > sink(new sink_t(backend));
+    */
+    
+    
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
+    sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>(filename));
     
     // specify the format of the log message 
     sink->set_formatter(&init_log_formatter<tag_file>);
@@ -154,6 +163,7 @@ void init_log_file(const std::string& filename, custom_severity_level threshold,
 
 void init_new_file(const std::string& filename, custom_severity_level threshold, log_op::operation op)
 {
+    /*
     // add a file text sink with filters but without any formatting
     std::string formatted_filename(filename);
     formatted_filename+=".%N.txt";
@@ -174,9 +184,13 @@ void init_new_file(const std::string& filename, custom_severity_level threshold,
         );
     typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
     boost::shared_ptr< sink_t > sink(new sink_t(backend));
-
-    //sink->set_formatter(&init_file_formatter);
+    */
     
+    //sink->set_formatter(&init_file_formatter);
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
+    sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>(filename));
+
     switch (op)
     {
         case log_op::operation::EQUAL :
@@ -276,4 +290,21 @@ void set_global_log_level_operation(log_op::operation op, custom_severity_level 
     }
 }
 
+/*
+void stop_logging(boost::shared_ptr< sink_t >& sink)
+{
+    boost::shared_ptr< logging::core > core = logging::core::get();
+
+    // Remove the sink from the core, so that no records are passed to it
+    core->remove_sink(sink);
+
+    // Break the feeding loop
+    sink->stop();
+
+    // Flush all log records that may have left buffered
+    sink->flush();
+
+    sink.reset();
+}
+*/
 

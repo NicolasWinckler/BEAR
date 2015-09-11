@@ -8,15 +8,61 @@
 #ifndef DEF_H
 #define	DEF_H
     
+// boost
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-#include "logger.h"
-#include "options_manager.h"
+#include <map>
+#include <memory>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+
+namespace po = boost::program_options;
+namespace fs = boost::filesystem;
+namespace ublas  = boost::numeric::ublas;
+
+
+class bear_summary
+{
+  public :
+    bear_summary() :    filename(), 
+                        outfilename(),  
+                        title(), 
+                        F_index_map(), 
+                        approximated_solutions(), 
+                        equilibrium_solutions(), 
+                        analytical_solutions(),max_fraction_index(0),
+                        system_dim(0), 
+                        reduced_system_dim(0) , offset(0)
+    {}
+    virtual ~bear_summary (){}
+
+
+    std::string filename;
+    std::string outfilename;
+    std::string title;
+    std::map<size_t,int> F_index_map;// matrix index -> real index
+
+    std::map<size_t,double> approximated_solutions;// matrix index -> Fi values
+    std::map<size_t,double> equilibrium_solutions;// matrix index -> Fi values
+    std::map<size_t,std::string> analytical_solutions;
+    
+    size_t max_fraction_index;
+
+    std::size_t system_dim;
+    std::size_t reduced_system_dim;
+    std::size_t offset;
+
+};
 
 namespace bear
 {
+    
     /*
     template<>
     default_sink& operator << < ublas::matrix<double,ublas::column_major> >
@@ -104,10 +150,10 @@ namespace bear
     };
 
     typedef po::variables_map                                    variables_map;
-    typedef ublas::vector<double>                                        vector_d;
-    typedef ublas::vector<std::complex<double> >                         vector_c;
-    typedef ublas::matrix<double,ublas::column_major>                    matrix_d;
-    typedef ublas::matrix<std::complex<double>,ublas::column_major>      matrix_c;
+    //typedef ublas::vector<double>                                        vector_d;
+    //typedef ublas::vector<std::complex<double> >                         vector_c;
+    //typedef ublas::matrix<double,ublas::column_major>                    matrix_d;
+    //typedef ublas::matrix<std::complex<double>,ublas::column_major>      matrix_c;
           
 }
 

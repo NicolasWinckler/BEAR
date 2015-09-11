@@ -24,12 +24,15 @@
 #include "boost/numeric/bindings/traits/ublas_vector.hpp"
 #include <boost/numeric/bindings/lapack/geev.hpp>
 
+// bear
+#include "def.h"
 
-namespace ublas  = boost::numeric::ublas;
 namespace lapack = boost::numeric::bindings::lapack;
-
 namespace bear
 {
+    
+//namespace ublas  = boost::numeric::ublas;
+//namespace lapack = boost::numeric::bindings::lapack;
     // general case of diagonalization
     template<typename T>
     inline int diagonalize_gen(

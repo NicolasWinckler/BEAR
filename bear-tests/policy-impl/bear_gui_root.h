@@ -14,6 +14,8 @@
 #include <memory>
 #include <iostream>     
 #include <sstream>      // std::stringstream
+#include <type_traits>
+#include <limits>       // std::numeric_limits
 
 #include "TF1.h"
 #include "TH1D.h"
@@ -40,7 +42,11 @@ namespace bear
                             fXmax(20.),     
                             fYmin(0.),  
                             fYmax(1.1),
-                            fNpoint(1000)
+                            fNpoint(1000),
+                            fMaxop(100000),
+                            fMaxpar(100000),
+                            fMaxconst(100000),
+                            fFunctions_derivative()
         {
         }
         virtual ~bear_gui_root()
@@ -58,7 +64,7 @@ namespace bear
             
         }
         
-        int init(const variables_map& vm)
+        int init(const variables_map& vm,const variables_map& vm2)
         {
             
             fXmin=vm.at("thickness.minimum").template as<double>();
@@ -79,7 +85,8 @@ namespace bear
             std::stringstream ss;
             
             ss<<proj_symbol
-                    <<" projectile at "<<proj_energy
+                    <<" projectile at "
+                    <<proj_energy
                     <<" on ^{"
                     <<target_mass<<"}"
                     <<target_symbol
@@ -101,14 +108,36 @@ namespace bear
             fLegend = new TLegend(0.4,0.7,0.9,0.9);
             fLegend->SetNColumns(4);
 
+            LOG(DEBUG)<<"init(variable_map)";
+            fMaxop=vm2.at("formula-maximum-operator").template as<int>();
+            fMaxpar=vm2.at("formula-maximum-parameter").template as<int>();
+            fMaxconst=vm2.at("formula-maximum-constant").template as<int>();
             return 0;
         }
 
+        
+        int init_summary(std::shared_ptr<bear_summary> const& summary) 
+        {
+            fSummary = summary;
+            return 0;
+        }
+        
+        
+        int compute_equilibrium_distance()
+        {
+            double epsilon=0.0001;
+            double x=0;
+            for(auto& p : fFunctions)
+            {
+                double val=p.second->Derivative(x,nullptr,epsilon);
+            }
+                
+            return 0;
+        }
+        
         int print_table()
         {
-            LOG(RESULTS)<<" ";
-            LOG(RESULTS)<<"##################################";
-            LOG(RESULTS)<<"#TABLE :";
+            
             std::ostringstream os_title;
             os_title<< std::setw(16)
                     //<<std::left
@@ -155,28 +184,34 @@ namespace bear
         }
         
         
-        int plot(const std::map<std::size_t, std::string>& input_functions)
+        
+        // init functions/histos
+        int init(const std::map<std::size_t, std::string>& input_functions)
         {
+            //Int_t maxop=std::numeric_limits<Int_t>::max();
+            //Int_t maxpar=std::numeric_limits<Int_t>::max();
+            //Int_t maxconst=std::numeric_limits<Int_t>::max();
+            
+            
             fMethod=kDiagonalization;
-            //fTitle+=" (Diagonalization method)";
             for(const auto& p : input_functions)
             {
-                std::string name = "F" + std::to_string(p.first+1);
+                std::string name = "F" + std::to_string(fSummary->F_index_map.at(p.first));
                 fFunctions[p.first] = std::make_shared<TF1>(name.c_str(), p.second.c_str(), fXmin, fXmax);
                 fFunctions.at(p.first)->SetNpx(fNpoint);
                 fFunctions.at(p.first)->SetLineColor(p.first+1);
+                fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst);
                 fLegend->AddEntry(fFunctions[p.first].get(), name.c_str());
             }
-            draw(fFunctions);
             return 0;
         }
         
-        
-        int plot(std::map<std::size_t, std::shared_ptr<TH1D> >& input_functions)
+        int init(std::map<std::size_t, std::shared_ptr<TH1D> >& input_functions, bool plot=false)
         {
             fMethod=kRungeKutta;
             fTitle+=" (Runge Kutta method)";
-            for(auto& p : input_functions)
+            fHistograms=input_functions;
+            for(auto& p : fHistograms)
             {
                 std::string name = "F" + std::to_string(p.first+1);
                 p.second->SetLineColor(p.first+1);
@@ -184,9 +219,26 @@ namespace bear
                 p.second->SetStats(kFALSE);
                 fLegend->AddEntry(p.second.get(), name.c_str());
             }
-            draw(input_functions);
+            //temporary hack
+            if(plot)
+                return draw(fHistograms);
             return 0;
         }
+        
+        // plot and draw functions
+        int plot()
+        {
+            if(fMethod==kDiagonalization)
+                return draw(fFunctions);
+            
+            //temporary hack
+            if(fMethod==kRungeKutta)
+                return init(fHistograms,true);
+            
+            
+            return 0;
+        }
+        
         
         
         template <typename T>
@@ -209,7 +261,7 @@ namespace bear
             for(auto& p : container_map)
             {
                 
-                if(p.first!=0)
+                if(p.first!=fSummary->max_fraction_index)
                     p.second->Draw("SAME");
                 else
                 {
@@ -242,6 +294,7 @@ namespace bear
         std::map<std::size_t, std::string> fInput;
         //std::map<std::size_t, TF1*> fFunctions;
         std::map<std::size_t, std::shared_ptr<TF1> > fFunctions;
+        std::map<std::size_t, std::shared_ptr<TF1> > fFunctions_derivative;
         double fXmin;
         double fXmax;
         double fYmin;
@@ -251,6 +304,11 @@ namespace bear
         std::string fYTitle;
         std::size_t fNpoint;
         enum method fMethod;
+        std::shared_ptr<bear_summary> fSummary;
+        std::map<std::size_t, std::shared_ptr<TH1D> > fHistograms;
+        Int_t fMaxop;
+        Int_t fMaxpar;
+        Int_t fMaxconst;
     };
 }
 

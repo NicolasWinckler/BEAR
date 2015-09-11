@@ -21,7 +21,7 @@ namespace bear
         typedef po::variables_map                                    variables_map;
         typedef fs::path                                                      path;
         
-        
+        std::shared_ptr<bear_summary> fSummary;
         
     protected:
         const double N_Avogadro = 6.022140857e+23;
@@ -46,7 +46,7 @@ namespace bear
                                 fVarmap_input_file(), 
                                 thickness_scale(), 
                                 cross_section_scale(),
-                                fSeverity_map()
+                                fSeverity_map(),fInput_dim_options("input dimensions options")
         {
             
             thickness_scale["fg/cm2"]           = 1.e-15;      // femto
@@ -91,6 +91,15 @@ namespace bear
 
         virtual ~bear_user_interface(){}
 
+        
+        
+        
+        int init_summary(std::shared_ptr<bear_summary> const& summary) 
+        {
+            fSummary = summary;
+            options_manager::init_summary(summary);
+            return 0;
+        }
 
         virtual int parse(const int argc, char** argv, bool AllowUnregistered = false)
         {
@@ -119,31 +128,26 @@ namespace bear
             fs::path input=fvarmap["input-file"].template as<fs::path>();
             std::string filename=input.stem().string();
             std::string output=fvarmap["output-directory"].template as<fs::path>().string();
-            output+="/Results_";
+            output+="/Bear-results-";
             output+=filename;
-            
-            //SET_LOGGER_LEVEL(verbose);
-            //SET_LOG_LEVEL(MAXDEBUG);
-            //bear::severity_level lvl = static_cast<bear::severity_level>(verbose);
+            output+=".txt";
             
             
             if(fSeverity_map.count(verbose))
             {
                 init_log_console(fSeverity_map.at(verbose),log_op::operation::GREATER_EQ_THAN);
-                //set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map.at(verbose));
             }
             else
             {
                 init_log_console(fSeverity_map.at("INFO"),log_op::operation::GREATER_EQ_THAN);
-                //set_global_log_level(log_op::operation::GREATER_EQ_THAN,fSeverity_map.at("RESULTS"));
+                LOG(WARN)<<"unrecognized verbosity options. It will be set to INFO";
             }
             
-            INIT_LOG_FILE_FILTER("results_log_test",GREATER_EQ_THAN,DEBUG);
-            INIT_NEW_FILE(output,EQUAL,RESULTS);
+            INIT_LOG_FILE_FILTER("bear.log",GREATER_EQ_THAN,DEBUG);
             
-            LOG(INFO)<<"Print output to : "<<output;
-            LOG(RESULTS)<<"Input file :"<<filename;
-            
+            fSummary->filename=input.filename().string();;
+            fSummary->outfilename=output;
+
             print_options();
             
             return 0;
@@ -169,6 +173,7 @@ namespace bear
         options_description fInput_desc;
         options_description fInfile_cmd_desc;
         options_description fInfile_cfg_desc;
+        options_description fInput_dim_options;
         variables_map fVarmap_input_file;
         
         void init_options_descriptions()
@@ -187,14 +192,27 @@ namespace bear
             }
             
             fBear_eq_options.add_options()
-                ("eq-dim",           po::value<size_t>()->default_value(0),                     "dimension of the system of equations")
-                ("coef-dim",         po::value<size_t>()->default_value(70),                    "dimension (maximum index) of the cross-section coefficients")
-                ("coef.index.i.min", po::value<size_t>()->default_value(0),                     "minimum index i of coefficient Qij")
-                ("coef.index.i.max", po::value<size_t>()->default_value(100),                   "maximum index i of coefficient Qij")
-                ("coef.index.j.min", po::value<size_t>()->default_value(0),                     "minimum index j of coefficient Qij")
-                ("coef.index.j.max", po::value<size_t>()->default_value(100),                   "maximum index j of coefficient Qij")
-                ("output-directory", po::value<path>()->default_value(fs::current_path()),      "path to the output file directory : \n"
+                ("output-directory", po::value<path>()->default_value(fs::current_path()),      "path to the output directory : \n"
                                                             "it will write the solutions of the equation system with provided input file name as suffix")
+                ("plot", po::value<bool>()->zero_tokens()->default_value(false),                   "plot ")
+                ("print-table", po::value<bool>()->zero_tokens()->default_value(false),                   "print table to file")
+                ("print-approximation", po::value<bool>()->zero_tokens()->default_value(false),                   "print approximation to file")
+                ("print-equilibrium", po::value<bool>()->zero_tokens()->default_value(false),                   "print equilibrium solution to file")
+                ("print-analytic", po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("print", po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+            
+            ;
+            
+            fInput_dim_options.add_options()
+                ("eq-dim",           po::value<size_t>()->default_value(0),                     "dimension of the system of equations")
+                ("coef.index.i.min", po::value<size_t>()->default_value(0),                     "minimum index i of coefficient Qij")
+                ("coef.index.i.max", po::value<size_t>()->default_value(200),                   "maximum index i of coefficient Qij")
+                ("coef.index.j.min", po::value<size_t>()->default_value(0),                     "minimum index j of coefficient Qij")
+                ("coef.index.j.max", po::value<size_t>()->default_value(200),                   "maximum index j of coefficient Qij")
+                ("formula-maximum-operator", po::value<int>()->default_value(500000),              "maximum number of operator allowed in string formulae")
+                ("formula-maximum-parameter", po::value<int>()->default_value(100000),              "maximum number of parameter allowed in string formulae")
+                ("formula-maximum-constant", po::value<int>()->default_value(100000),              "maximum number of constant allowed in string formulae")
+                
             ;
             
             //init_initial_condition_descriptions(fBear_eq_options);
@@ -202,11 +220,17 @@ namespace bear
             addTo_cmdLine(fGenericDesc);
             addTo_cmdLine(fInfile_cmd_desc);
             addTo_cmdLine(fBear_eq_options);
+            addTo_cmdLine(fInput_dim_options,false);
+            
+            //register_parsedOptions_to_print(fInput_dim_options,false);
             if (fUse_cfgFile)
             {
                 addTo_cfgFile(fInfile_cfg_desc,false);
                 addTo_cfgFile(fBear_eq_options,false);
+                addTo_cfgFile(fInput_dim_options,false);
             }
+            
+            fVisible_key_map["verbose"] = false;
         }
         
         int init_coef_descriptions(options_description& desc)
@@ -269,7 +293,7 @@ namespace bear
                 std::string desc_str("Initial conditions ");
                 desc_str+=std::to_string(i);
                 
-                std::string key("F0");
+                std::string key("cross.section.F0");
                 key+=fSep1;
                 key+=std::to_string(i);
                 key+=fSep3;
@@ -289,6 +313,13 @@ namespace bear
         {
             std::string key("cross.section.");
             key+=fSymbol+fSep1+std::to_string(i)+fSep2+std::to_string(j);
+            return key;
+        }
+        
+        inline std::string form_init_cond_key(size_t i)
+        {
+            std::string key("cross.section.");
+            key+="F0"+fSep1+std::to_string(i)+fSep3;
             return key;
         }
     

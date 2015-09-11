@@ -18,7 +18,7 @@ namespace bear
                                 fCoef_list(),
                                 fMat(),
                                 f2nd_member(),
-                                fF0()
+                                fF0(), fCoef_index_min(0), fCoef_index_max(0),fIni_cond_map()
             {
             }
 
@@ -62,10 +62,11 @@ namespace bear
         ublas::range input_coef_range_i(  fvarmap.at("coef.index.i.min").template as<size_t>() , 
                                           fvarmap.at("coef.index.i.max").template as<size_t>()+1
                                        );
-
         ublas::range input_coef_range_j(  fvarmap.at("coef.index.j.min").template as<size_t>() , 
                                           fvarmap.at("coef.index.j.max").template as<size_t>()+1
                                        );
+        
+        
 
         LOG(DEBUG)<<"init coefficients description ...";
         /// use prog options to parse input data file
@@ -73,9 +74,16 @@ namespace bear
         options_description input_file_desc("input file description");
         options_description coef_desc("cross-sections description");
         options_description header_desc("cross-sections header description");
+        options_description ic_desc("Initial conditions");
+        
+        ui_type::init_initial_condition_descriptions(
+                                            ic_desc,
+                                            fvarmap.at("coef.index.i.min").template as<size_t>() , 
+                                            fvarmap.at("coef.index.i.max").template as<size_t>()+1
+                                       );
         ui_type::init_coef_descriptions(coef_desc);
         ui_type::init_input_header_descriptions(header_desc);
-        input_file_desc.add(header_desc).add(coef_desc);
+        input_file_desc.add(header_desc).add(coef_desc).add(ic_desc);
         
         
         
@@ -89,7 +97,7 @@ namespace bear
         filename_out+=".bear.txt";
 
         std::ifstream infile(filename.string());
-        std::ofstream outfile(filename_out.string());
+        
 
         bool UTF8=false;
         if (infile.good())
@@ -99,22 +107,22 @@ namespace bear
             if (line.compare( 0, 3, "\xEF\xBB\xBF" ) == 0)
             {
                 line.erase( 0, 3 );
-                outfile<<line<<std::endl;
                 UTF8=true;
             }
-            else
+            
+            if(UTF8)
             {
-                outfile<<line<<std::endl;
-            }
-
-            while(getline(infile, line))
-            {
-                outfile<<line<<std::endl;
+                std::ofstream outfile(filename_out.string());
+                while(getline(infile, line))
+                {
+                    outfile<<line<<std::endl;
+                }        
+                outfile.close();
             }
         }
 
         infile.close();
-        outfile.close();
+        
         path file_to_parse;
         if(UTF8)
             file_to_parse=filename_out;
@@ -181,12 +189,45 @@ namespace bear
                 }
             }
 
+        fCoef_index_min=index_i_min;
+        fCoef_index_max=index_i_max;
         // get new range objects (index_i_max + 1 to include last index)
         ublas::range coef_range_i(index_i_min,index_i_max+1);
         ublas::range coef_range_j(index_j_min,index_j_max+1);
         // and update the corresponding private members
         fCoef_range_i=coef_range_i;
         fCoef_range_j=coef_range_j;
+        
+        // do the same for initial conditions
+        index_i_min = std::numeric_limits<size_t>::max(); 
+        index_i_max = std::numeric_limits<size_t>::min();
+        index_j_min = std::numeric_limits<size_t>::max(); 
+        index_j_max = std::numeric_limits<size_t>::min();
+
+        
+        
+        for(const auto& i : input_coef_range_i)
+        {
+            std::string key=ui_type::form_init_cond_key(i);
+            if(vm.count(key))
+            {
+                if(!vm.at(key).defaulted())
+                {
+                    data_type val=vm.at(key).as<data_type>();
+                    LOG(DEBUG)<<"found initial conditions : "<< key <<" == "<< val;
+                    
+                    data_type ic_val=vm.at(key).as<data_type>();
+                    fIni_cond_map.insert(std::make_pair(i, ic_val) );
+                    if(i<index_i_min)
+                            index_i_min=i;
+
+                    if(i>index_i_max)
+                        index_i_max=i;
+                }
+            }
+        }
+        
+        ublas::range init_cond_range(index_i_min,index_i_max+1);
         fEqDim=fvarmap["eq-dim"].template as<size_t>();
 
 
@@ -206,30 +247,42 @@ namespace bear
             LOG(MAXDEBUG)<<" range-j="<<j;
 
         // perform some checks. 
-        LOG(MAXDEBUG)<<"checking for index ranges ...";
+        LOG(DEBUG)<<"checking for index ranges ...";
+        
+        if(init_cond_range!=fCoef_range_i)
+        {
+            LOG(ERROR)<<"i and j range index are different and should be the same.";
+            LOG(ERROR)<<"check the given cross-section coefficients in file "<<filename.string();
+            return 1;
+        }
+        
         if(fCoef_range_i!=fCoef_range_j)
         {
             LOG(ERROR)<<"i and j range index are different and should be the same.";
             LOG(ERROR)<<"check the given cross-section coefficients in file "<<filename.string();
             return 1;
         }
-        else
+        /*else
         {
+            
             if(fEqDim>fCoef_range_i.size())
             {
-                LOG(ERROR)<<"found matrix dimension (dim="<< fCoef_range_i.size() 
-                            <<") is smaller than the user provided dimension ("<<fEqDim<<").";
-                LOG(ERROR)<<"check the given cross-section coefficients in file "<<filename.string();
-                LOG(ERROR)<<"or the configuration file ";
+                LOG(ERROR)  <<"the found matrix dimension (dim="<< fCoef_range_i.size() 
+                            <<") is smaller than the user provided one ("<<fEqDim<<").";
+                
+                LOG(ERROR)  <<"check the provided cross-section coefficients "
+                            <<filename.string()
+                            <<" or the configuration options ";
                 //LOG(WARNING)<<"check the cross-section coefficient indices or the user provided dimension";
                 fEqDim=fCoef_range_i.size();
                 return 1;
             }
-
+            
             // temporary : force user dim to found dim
-            fEqDim=fCoef_range_i.size();
-        }
+            
+        }*/
 
+        fEqDim=fCoef_range_i.size();
 
         // if all checks are fine, fill missing coefs in new reduced range with zeros :
         for(const auto& i : fCoef_range_i)
@@ -245,25 +298,29 @@ namespace bear
         size_t dim=fCoef_range_i.size();
         size_t offset=fCoef_range_i.start();
         size_t last_index=offset+dim-1;
-        options_description ic_desc("Initial conditions");
-        ui_type::init_initial_condition_descriptions(ic_desc,offset,last_index);
+        
 
         if (ui_type::fUse_cfgFile)
+        {
+            if (fs::exists(ui_type::fConfig_file_path))
             {
-                if (fs::exists(ui_type::fConfig_file_path))
-                {
-                    if (ui_type::parse_cfgFile(ui_type::fConfig_file_path.string(), ic_desc, ui_type::fvarmap, true))
-                        return 1;
-                }
-                else
-                {
-                    LOG(ERROR)<<"config file '"<< fConfig_file_path <<"' not found";
+                if (ui_type::parse_cfgFile(ui_type::fConfig_file_path.string(), ic_desc, ui_type::fvarmap, true))
                     return 1;
-                }
-                
             }
-            
+            else
+            {
+                LOG(ERROR)<<"config file '"<< fConfig_file_path <<"' not found";
+                return 1;
+            }
+
+        }
         
+        vector_d F0(dim); 
+        for(const auto& p : fIni_cond_map)
+        {
+            F0(p.first-offset)=p.second;
+        }
+        fF0=F0;
         return 0;
     }// end read_impl
     
@@ -292,11 +349,9 @@ namespace bear
 
         std::string verbose=fvarmap["verbose"].template as<std::string>();
         LOG(DEBUG) << "printing generated matrix to process : ";
-        //if(logger::DEBUG>=verbose)
-        //    std::cout << fMat << std::endl;
+        LOG(DEBUG) << fMat << std::endl;
         LOG(DEBUG) << "and second member vector : ";
-        //if(logger::DEBUG>=verbose)
-        //    std::cout << f2nd_member << std::endl;
+        LOG(DEBUG) << f2nd_member << std::endl;
 
         return 0;
     }
@@ -340,21 +395,40 @@ namespace bear
         size_t dim=fCoef_range_i.size();
         size_t offset=fCoef_range_i.start();
         size_t last_index=offset+dim-1;
-        LOG(MAXDEBUG)   <<"in dynamic_eq_system() equations parameters : dim = " << dim
+        fEqDim=dim;// todo : clean previous assignment
+        fSummary->system_dim=dim;
+        fSummary->reduced_system_dim=dim-1;
+        fSummary->offset=offset;
+        LOG(DEBUG)   <<"in dynamic_eq_system() equations parameters : dim = " << dim
                         <<" offset = " << offset << " last index = " << last_index;
         ublas::range reduced_range(offset,last_index);// last point excluded : dim=N-1
-
         if(dim>1)
         {
+            // store and map indexes
+            for(const auto& p : fCoef_range_i)
+                if(p-offset>=0)
+                    fSummary->F_index_map[p-offset] = static_cast<int>(p);
+                else
+                {
+                    LOG(ERROR)<<"index difference with the offset is negative";
+                    return 1;
+                }
+            LOG(DEBUG)<<"size of map index "<< fSummary->F_index_map.size();
+            for(const auto& p : fSummary->F_index_map)
+                LOG(DEBUG)<<" index " << p.first << " -> "<<p.second;
+
             // system is reduced by one dimension due to condition FN=1-Sum(k=1 to N-1) Fk
             matrix_d mat(dim-1,dim-1);
             for(const auto& p : reduced_range)
                 for(const auto& q : reduced_range)
                 {
-
+                    LOG(MAXDEBUG)<<" coef("<<p<<","<<q <<")"<< " offset="<<offset;
+                    LOG(MAXDEBUG)<<" mat("<<p-offset<<","<<q-offset <<")"<< " offset="<<offset;
+                    
                     mat(p-offset,q-offset)=compute_matrix_element(p,q)-compute_matrix_element(p,last_index);
                     LOG(MAXDEBUG)<<"mat("<<p<<","<<q <<") = "<< mat(p-offset,q-offset);
                 }
+
             // clear and copy
             fMat.clear();
             fMat=mat;
@@ -379,21 +453,21 @@ namespace bear
     template <typename T, typename U >
     std::vector<double> bear_equations<T,U>::get_1electron_approximation_solution()
     {
-        LOG(MAXDEBUG)<<"ANALYTICAL SOLUTION - matrix dim = "<<fMat.size1();
+        LOG(MAXDEBUG)<<"1-electron approximation solution- matrix dim = "<<fMat.size1();
         
         size_t syst_dim=fMat.size1()+1;
-        
+        size_t coef_index_min=fCoef_index_min-1;
         
         //F1
         typedef std::pair<size_t,size_t> coef;
         std::vector<double> ana_sol;
         //data_type coef_val=vm.at(coef(14,15)).as<data_type>();
         //*
-        double denominator=1+fCoef_list.at(coef(syst_dim-1,syst_dim))/fCoef_list.at(coef(syst_dim,syst_dim-1));
+        double denominator=1+fCoef_list.at(coef(coef_index_min+syst_dim-1,coef_index_min+syst_dim))/fCoef_list.at(coef(coef_index_min+syst_dim,coef_index_min+syst_dim-1));
         //double denominator=1+fQ[14][15]/fQ[15][14];
         //std::cout<<"denominator (1) = "<<denominator<<std::endl;
 
-        for(int i(syst_dim-2);i>0;i--)
+        for(int i(coef_index_min+syst_dim-2);i>coef_index_min;i--)
         {
             //denominator*=fQ[i][i+1]/fQ[i+1][i];
             denominator*=fCoef_list.at(coef(i,i+1))/fCoef_list.at(coef(i+1,i));
@@ -410,8 +484,9 @@ namespace bear
         double Fi=F1;
         double Fip1=0.0;
         double sum=F1;
-        for(int i(1);i<syst_dim;i++)
+        for(int i(coef_index_min+1);i<coef_index_min+syst_dim;i++)
         {
+            LOG(MAXDEBUG)<<"i="<<i;
             //Fip1=Fi*(fQ[i][i+1]/fQ[i+1][i]);
             Fip1=Fi*(fCoef_list.at(coef(i,i+1))/fCoef_list.at(coef(i+1,i)));
             LOG(MAXDEBUG)<<"F"<<i+1<<"="<<Fip1;

@@ -86,6 +86,9 @@ int main(int argc, char** argv)
             A(1,0)=0; A(1,1)=3;  A(2,2)=1;
             A(2,0)=0; A(2,1)=0;  A(2,2)=3;
             break;
+            
+        case diagonalisation::unknown :
+            break;
     }
     
             
@@ -94,8 +97,8 @@ int main(int argc, char** argv)
     //    LOG(DEBUG)<<"diagonalize_gen function returned error value "<<diag_gen_err;
     
     //solver.solve_homogeneous_system(A,snd_member);
-    
-    solver.solve(A,snd_member);
+    vector_d ini_cond(3);
+    solver.solve(A,snd_member,ini_cond);
     
     
     

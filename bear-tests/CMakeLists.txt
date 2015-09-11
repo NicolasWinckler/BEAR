@@ -8,6 +8,16 @@ configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/solveDynamicEq.sh.in ${CMAK
 configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/config/bear-config-steady.cfg.in ${CMAKE_SOURCE_DIR}/data/config/bear-config-steady.cfg )
 configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/solveDynamicEqRootAll.sh.in ${CMAKE_BINARY_DIR}/bin/solveDynamicEqRootAll.sh)
 
+
+configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/bear-eq.sh.in ${CMAKE_BINARY_DIR}/bin/bear-eq.sh )
+configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/bear-plot.sh.in ${CMAKE_BINARY_DIR}/bin/bear-plot.sh )
+configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/config/bear-config-save-to-file.cfg.in ${CMAKE_SOURCE_DIR}/data/config/bear-config-save-to-file.cfg )
+configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/config/bear-config-no-save-to-file.cfg.in ${CMAKE_SOURCE_DIR}/data/config/bear-config-no-save-to-file.cfg )
+
+
+EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/bear-eq.sh")
+EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/bear-plot.sh")
+
 EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/solveSteadyEq.sh")
 EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/solveDynamicEq.sh")
 EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/solveDynamicEqRootAll.sh")
