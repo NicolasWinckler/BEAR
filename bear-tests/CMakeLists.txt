@@ -81,7 +81,19 @@ if(LAPACK_FOUND AND BNB_FOUND)
   ## ROOT GUI
   if(ROOT_FOUND)
   
-      
+      #set(LINK_DIRECTORIES ${ROOT_LIBRARY_DIR} ${LINK_DIRECTORIES}) 
+
+      #link_directories(${LINK_DIRECTORIES})
+
+      Set(SRCS ${CMAKE_SOURCE_DIR}/bear-tests/policy-impl/handle_root_signal.cxx)
+
+      Set(LINKDEF ${CMAKE_SOURCE_DIR}/bear-tests/policy-impl/sig_handlerLinkDef.h)
+      Set(LIBRARY_NAME handle_root_signal)
+      Set(DEPENDENCIES Hist RIO Cint Core Gui Gpad)
+
+
+      GENERATE_LIBRARY()
+
       Set(EXE_NAME runSolveDynEqRoot)
       Set(SRCS 
         run/runSolveDynEqRoot.cxx
@@ -89,7 +101,7 @@ if(LAPACK_FOUND AND BNB_FOUND)
       #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
       #set(LIBS_MAP_LAPACK "LAPACK")
       Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
-         Hist Graf Gpad RIO Cint Core
+         Hist Graf Gpad RIO Cint Core handle_root_signal
          )
       GENERATE_EXECUTABLE()
 
@@ -102,7 +114,7 @@ if(LAPACK_FOUND AND BNB_FOUND)
       #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
       #set(LIBS_MAP_LAPACK "LAPACK")
       Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
-         Hist Graf Gpad RIO Cint Core
+         Hist Graf Gpad RIO Cint Core handle_root_signal
          )
       GENERATE_EXECUTABLE()
 

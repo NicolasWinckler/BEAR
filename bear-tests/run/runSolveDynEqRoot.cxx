@@ -58,16 +58,7 @@ int main(int argc, char** argv)
         if(man.run())
             return 1;
         
-        /// /////////////////////////////////////////////////////
-        // PLOT
-        TApplication app("App", nullptr, 0);
-        if(plot)
-        {
-            LOG(INFO)<<" ";
-            LOG(STATE)<<"plotting ...";
-            if(man.plot()) 
-                return 1;
-        }
+        
         
         /// /////////////////////////////////////////////////////
         // PRINT
@@ -79,10 +70,19 @@ int main(int argc, char** argv)
                 return 1;
         }
             
+        /// /////////////////////////////////////////////////////
+        // PLOT
         
-        // run event loop
         if(plot)
+        {
+            TApplication app("App", nullptr, 0);
+            LOG(INFO)<<" ";
+            LOG(STATE)<<"plotting ...";
+            if(man.plot()) 
+                return 1;
+            // run event loop
             app.Run();
+        }
         
     }
     catch(std::exception& e)

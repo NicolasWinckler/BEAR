@@ -25,6 +25,7 @@
 
 #include "logger.h"
 #include "def.h"
+#include "handle_root_signal.h"
 
 namespace bear
 {
@@ -46,7 +47,8 @@ namespace bear
                             fMaxop(100000),
                             fMaxpar(100000),
                             fMaxconst(100000),
-                            fFunctions_derivative()
+                            fFunctions_derivative(),
+                            fSingal_handler()
         {
         }
         virtual ~bear_gui_root()
@@ -64,6 +66,10 @@ namespace bear
             
         }
         
+        TCanvas* get_canvas()
+        {
+            return fCanvas;
+        }
         int init(const variables_map& vm,const variables_map& vm2)
         {
             
@@ -257,6 +263,7 @@ namespace bear
             if(fMethod!=kRungeKutta && fMethod!=kDiagonalization)
                 throw std::runtime_error("Unrecognized method to solve the equations");
             
+            fSingal_handler.set_canvas(fCanvas);
             fCanvas->SetLogx();
             for(auto& p : container_map)
             {
@@ -309,6 +316,10 @@ namespace bear
         Int_t fMaxop;
         Int_t fMaxpar;
         Int_t fMaxconst;
+        
+        handle_root_signal fSingal_handler;
+        
+        // 
     };
 }
 

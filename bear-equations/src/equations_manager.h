@@ -85,6 +85,7 @@ namespace bear
             gui_type::init(eq_type::fVarmap_input_file,eq_type::fvarmap);
             gui_type::init(solve_eq_type::fGeneral_solution);
             
+            
             return 0;
         }
         
