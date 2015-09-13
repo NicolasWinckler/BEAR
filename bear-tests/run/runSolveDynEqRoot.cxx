@@ -42,8 +42,8 @@ int main(int argc, char** argv)
             return 1;
         
         bool plot = man.get_varMap()["plot"].as<bool>();
-        bool print = man.get_varMap()["print"].as<bool>();
-        
+        bool save = man.get_varMap()["save"].as<bool>();
+        bool save_fig = man.get_varMap()["save-fig-ne"].as<bool>();
         /// /////////////////////////////////////////////////////
         // INIT EQUATIONS
         LOG(INFO)<<" ";
@@ -61,11 +61,11 @@ int main(int argc, char** argv)
         
         
         /// /////////////////////////////////////////////////////
-        // PRINT
-        if(print)
+        // SAVE
+        if(save)
         {
             LOG(INFO)<<" ";
-            LOG(STATE)<<"saving ...";
+            LOG(STATE)<<"saving to file ...";
             if(man.save()) 
                 return 1;
         }
@@ -82,6 +82,15 @@ int main(int argc, char** argv)
                 return 1;
             // run event loop
             app.Run();
+        }
+        else
+        {
+            if(save_fig)
+            {
+                
+                if(man.plot()) 
+                    return 1;
+            }
         }
         
     }

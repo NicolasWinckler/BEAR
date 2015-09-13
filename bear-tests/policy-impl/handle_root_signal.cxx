@@ -7,7 +7,7 @@
 
 #include "handle_root_signal.h"
 
-handle_root_signal::handle_root_signal() : fCanvas(nullptr)
+handle_root_signal::handle_root_signal() : fCanvas(NULL)
 {
 }
 

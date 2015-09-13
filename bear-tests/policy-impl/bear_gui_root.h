@@ -48,28 +48,16 @@ namespace bear
                             fMaxpar(100000),
                             fMaxconst(100000),
                             fFunctions_derivative(),
-                            fSingal_handler()
+                            fSingal_handler(),
+                            fOut_fig_filename()
         {
         }
         virtual ~bear_gui_root()
         {
-            //for(auto& p : fFunctions)
-                //if(p.second)
-                   // delete p.second;
-            
-            if(fLegend)
-                delete fLegend;
-            
-            if(fCanvas)
-                delete fCanvas;
-            
-            
+            fCanvas.reset();
+            fLegend.reset();
         }
         
-        TCanvas* get_canvas()
-        {
-            return fCanvas;
-        }
         int init(const variables_map& vm,const variables_map& vm2)
         {
             
@@ -111,13 +99,27 @@ namespace bear
             
             fYTitle="Fractions";
             
-            fLegend = new TLegend(0.4,0.7,0.9,0.9);
+            fLegend = std::make_shared<TLegend>(0.4,0.7,0.9,0.9);
             fLegend->SetNColumns(4);
 
             LOG(DEBUG)<<"init(variable_map)";
             fMaxop=vm2.at("formula-maximum-operator").template as<int>();
             fMaxpar=vm2.at("formula-maximum-parameter").template as<int>();
             fMaxconst=vm2.at("formula-maximum-constant").template as<int>();
+            
+            fs::path input=vm2["input-file"].template as<fs::path>();
+            std::string filename=input.stem().string();
+            std::string output=vm2["output-directory"].template as<fs::path>().string();
+            output+="/Bear-results-figure-ne-";
+            output+=filename;
+            output+=".pdf";
+            //LOG(INFO)<<"save figure to : "<<output;
+            
+            fSave_ne=vm2["save-fig-ne"].template as<bool>();
+            
+            
+            fOut_fig_filename=output;            
+            
             return 0;
         }
 
@@ -200,6 +202,9 @@ namespace bear
             
             
             fMethod=kDiagonalization;
+            //fCanvas = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
+            
+            
             for(const auto& p : input_functions)
             {
                 std::string name = "F" + std::to_string(fSummary->F_index_map.at(p.first));
@@ -217,6 +222,8 @@ namespace bear
             fMethod=kRungeKutta;
             fTitle+=" (Runge Kutta method)";
             fHistograms=input_functions;
+            fCanvas = std::make_shared<TCanvas>("c1RK","Solutions - Runge Kutta",800,600);
+            
             for(auto& p : fHistograms)
             {
                 std::string name = "F" + std::to_string(p.first+1);
@@ -245,6 +252,12 @@ namespace bear
             return 0;
         }
         
+        int save_fig(const std::string& filename)
+        {
+            fCanvas->SaveAs(filename.c_str());
+            return 0;
+        }
+        
         
         
         template <typename T>
@@ -252,18 +265,13 @@ namespace bear
         {
             LOG(DEBUG)<<"GUI start";
             
-            if(fMethod==kDiagonalization)
-                fCanvas = new TCanvas("c1Dia","Solutions - Diagonalization",800,600);
-            
-            
-            if(fMethod==kRungeKutta)
-                fCanvas = new TCanvas("c1RK","Solutions - Runge Kutta",800,600);
+            fCanvas = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
             
             
             if(fMethod!=kRungeKutta && fMethod!=kDiagonalization)
                 throw std::runtime_error("Unrecognized method to solve the equations");
             
-            fSingal_handler.set_canvas(fCanvas);
+            fSingal_handler.set_canvas(fCanvas.get());
             fCanvas->SetLogx();
             for(auto& p : container_map)
             {
@@ -291,12 +299,22 @@ namespace bear
 
             //fCanvas->SetLogx();
             fLegend->Draw();
+            
+            
+            if(fSave_ne)
+            {
+                LOG(INFO)<<" ";
+                LOG(STATE)<<"saving to figure ...";
+                LOG(INFO)<<"- saving figure of non-equilibrium solutions to : "<<fOut_fig_filename;
+                save_fig(fOut_fig_filename);
+                LOG(INFO)<<" ";
+            }
             return 0;
         }
         
     private:
-        TCanvas* fCanvas;
-        TLegend* fLegend;
+        std::shared_ptr<TCanvas> fCanvas;
+        std::shared_ptr<TLegend> fLegend;
         //TF1 *fa1;
         std::map<std::size_t, std::string> fInput;
         //std::map<std::size_t, TF1*> fFunctions;
@@ -318,7 +336,8 @@ namespace bear
         Int_t fMaxconst;
         
         handle_root_signal fSingal_handler;
-        
+        std::string fOut_fig_filename;
+        bool fSave_ne;
         // 
     };
 }

@@ -192,14 +192,18 @@ namespace bear
             }
             
             fBear_eq_options.add_options()
-                ("output-directory", po::value<path>()->default_value(fs::current_path()),      "path to the output directory : \n"
+                ("output-directory",    po::value<path>()->default_value(fs::current_path()),      "path to the output directory : \n"
                                                             "it will write the solutions of the equation system with provided input file name as suffix")
-                ("plot", po::value<bool>()->zero_tokens()->default_value(false),                   "plot ")
-                ("print-table", po::value<bool>()->zero_tokens()->default_value(false),                   "print table to file")
-                ("print-approximation", po::value<bool>()->zero_tokens()->default_value(false),                   "print approximation to file")
-                ("print-equilibrium", po::value<bool>()->zero_tokens()->default_value(false),                   "print equilibrium solution to file")
-                ("print-analytic", po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
-                ("print", po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("plot",                po::value<bool>()->zero_tokens()->default_value(false),                   "plot ")
+                ("print",               po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("save-table",         po::value<bool>()->zero_tokens()->default_value(false),                   "print table to file")
+                ("save-approximation", po::value<bool>()->zero_tokens()->default_value(false),                   "print approximation to file")
+                ("save-equilibrium",   po::value<bool>()->zero_tokens()->default_value(false),                   "print equilibrium solution to file")
+                ("save-analytic",      po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("save",                po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("save-fig-e",          po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("save-fig-ne",         po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                //("save-fig-ne-root", po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
             
             ;
             
@@ -341,7 +345,7 @@ namespace bear
 
             return 0;
         }
-    
+        
         
         double scale_factor(const variables_map& vm)
         {

@@ -27,6 +27,7 @@ namespace bear
         int plot(){return 0;}
         int init_summary(std::shared_ptr<bear_summary> const& summary) {return 0;}
         int print_table(){return 0;}
+        int save_fig(const std::string& filename){return 0;}
     };
     
     
@@ -135,7 +136,7 @@ namespace bear
             LOG(RESULTS)<<" ";
             
             
-            bool print_equilibrium=eq_type::fvarmap["print-equilibrium"].template as<bool>();
+            bool print_equilibrium=eq_type::fvarmap["save-equilibrium"].template as<bool>();
             
             if(print_equilibrium)
             {
@@ -162,7 +163,7 @@ namespace bear
             }
             ////////////////////////////////////////////////////////////////////////////////////////
             
-            bool print_approximation=eq_type::fvarmap["print-approximation"].template as<bool>();
+            bool print_approximation=eq_type::fvarmap["save-approximation"].template as<bool>();
             
             if(print_approximation)
             {
@@ -191,11 +192,12 @@ namespace bear
             
             ////////////////////////////////////////////////////////////////////////////////////////
             
-            bool print_table=eq_type::fvarmap["print-table"].template as<bool>();
-            bool print_tanalytic=eq_type::fvarmap["print-analytic"].template as<bool>();
+            bool save_table=eq_type::fvarmap["save-table"].template as<bool>();
+            bool save_analytic=eq_type::fvarmap["save-analytic"].template as<bool>();
+            bool save_fig_ne=eq_type::fvarmap["save-fig-ne"].template as<bool>();
             
             
-            if(print_table || print_tanalytic)
+            if(save_table || save_analytic)
             {
                 LOG(RESULTS)<<" ";
                 LOG(RESULTS)<<"##########################################################################";
@@ -206,7 +208,7 @@ namespace bear
                 
             
             
-            if(print_tanalytic)
+            if(save_analytic)
             {
                 LOG(RESULTS)<<"##################################";
                 LOG(RESULTS)<<"#computed analytical formulae :";
@@ -224,7 +226,7 @@ namespace bear
             
             
             
-            if(print_table)
+            if(save_table)
             {
                 LOG(RESULTS)<<" ";
                 LOG(RESULTS)<<"##################################";
@@ -234,7 +236,24 @@ namespace bear
                 LOG(RESULTS)<<"Point number : "<<Npoint;
                 gui_type::print_table();
             }
-            LOG(INFO)<<"Print output to : "<<fSummary->outfilename;
+            LOG(INFO)<<"- saving output to : "<<fSummary->outfilename;
+            
+            
+            if(save_fig_ne)
+            {
+                /*
+                fs::path input=eq_type::fvarmap["input-file"].template as<fs::path>();
+                std::string filename=input.stem().string();
+                std::string output=eq_type::fvarmap["output-directory"].template as<fs::path>().string();
+                output+="/Bear-results-figure-ne-";
+                output+=filename;
+                output+=".pdf";
+                LOG(INFO)<<"save figure to : "<<output;
+                 //*/
+                //gui_type::plot();
+                //gui_type::save_fig(output);
+            }
+            
             
             return 0;
         }
@@ -242,6 +261,9 @@ namespace bear
         int plot()
         {
             gui_type::plot();
+            bool save_figure = false;//eq_type::fvarmap["save-fig-ne"].template as<bool>();
+            
+            
             return 0;
         }
         

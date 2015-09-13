@@ -4,13 +4,16 @@
 # output options
 
 plot = false
-print = true
-print-equilibrium= true
-print-analytic= true
-print-approximation= true
-print-table= true
+save = true
+save-equilibrium = true
+save-analytic = true
+save-approximation = true
+save-table = true
 
-output-directory    =   @CMAKE_SOURCE_DIR@/data/output
+save-fig-e = true
+save-fig-ne = true
+
+output-directory = @CMAKE_SOURCE_DIR@/data/output
 
 
 
