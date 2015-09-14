@@ -26,6 +26,10 @@
 #include "logger.h"
 #include "def.h"
 #include "handle_root_signal.h"
+#pragma gcc diagnostic push
+#pragma gcc diagnostic ignored "-Wshadow"
+#include <boost/property_tree/json_parser.hpp>
+#pragma gcc diagnostic pop
 
 namespace bear
 {
