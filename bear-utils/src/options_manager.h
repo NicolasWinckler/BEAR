@@ -110,11 +110,11 @@ namespace bear
             return 0;
         }
 
-        
+        variables_map fvarmap;
         
     protected:
         // options container
-        variables_map fvarmap;
+        
 
         // basic description categories
         options_description fGenericDesc;
