@@ -107,16 +107,16 @@ if(LAPACK_FOUND AND BNB_FOUND)
 
 
 
-      Set(EXE_NAME runSolveDynEqRootRK)
-      Set(SRCS 
-        run/runSolveDynEqRoot_RK.cxx
-      )
+      #Set(EXE_NAME runSolveDynEqRootRK)
+      #Set(SRCS 
+      #  run/runSolveDynEqRoot_RK.cxx
+      #)
       #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
       #set(LIBS_MAP_LAPACK "LAPACK")
-      Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
-         Hist Graf Gpad RIO Cint Core handle_root_signal
-         )
-      GENERATE_EXECUTABLE()
+      #Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
+      #   Hist Graf Gpad RIO Cint Core handle_root_signal
+      #   )
+      #GENERATE_EXECUTABLE()
 
 
   endif(ROOT_FOUND)

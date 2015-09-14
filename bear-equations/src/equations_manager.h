@@ -55,7 +55,7 @@ namespace bear
         
         virtual ~equations_manager (){}
 
-        auto get_options() -> decltype(eq_type::fvarmap)
+        variables_map get_options()// -> decltype(eq_type::fvarmap)
         {
             return eq_type::fvarmap;
         }
