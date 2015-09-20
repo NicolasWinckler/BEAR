@@ -8,7 +8,7 @@ The differential equations (non-equilibrium case) are solved using the eigenvalu
 #### Input
 BEAR needs electron-loss and -capture cross-sections (as well as initial conditions) as inputs in order to solve the (non-equilibrium) Betz equations.
 Only charge q greater or equal than zero are supported. 
-An [INI-like format](https://en.wikipedia.org/wiki/INI_file) is used as input file. BEAR input file examples can be found [here](https://github.com/NicolasWinckler/BEAR/blob/master/data/input/Example-8lvl-system-bis.txt) or [there](https://github.com/NicolasWinckler/BEAR/blob/master/data/input/Example-15lvl-system.txt). JSON or XML input files will also be supported. Supported cross-section units are : "cm2", "1e-16 cm2", or "xb", where x is the [metric prefix](https://en.wikipedia.org/wiki/Metric_prefix). The supported units of the penetration depth, required for the non-equilibrium solutions, are : "10 mg/cm2" or "xg/cm2" where x is the [metric prefix](https://en.wikipedia.org/wiki/Metric_prefix).
+An [INI-like format](https://en.wikipedia.org/wiki/INI_file) is used as input file. BEAR input file examples can be found [here](https://github.com/NicolasWinckler/BEAR/blob/master/data/input/Example-8lvl-system-bis.txt) or [there](https://github.com/NicolasWinckler/BEAR/blob/master/data/input/Example-15lvl-system.txt). JSON or XML input files will also be supported. Supported cross-section units are : "cm2", "1e-16 cm2", or "xb", where x is a [SI prefix](https://en.wikipedia.org/wiki/Metric_prefix). The supported units of the penetration depth, required for the non-equilibrium solutions, are : "10 mg/cm2" or "xg/cm2" where x is a [SI prefix](https://en.wikipedia.org/wiki/Metric_prefix).
 #### Output
 
 
