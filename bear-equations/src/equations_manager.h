@@ -22,12 +22,11 @@ namespace bear
         no_gui(){}
         virtual ~no_gui(){}
         
-        template <typename... Args>
-        int init(Args&... args){return 0;}
-        int plot(){return 0;}
-        int init_summary(std::shared_ptr<bear_summary> const& summary) {return 0;}
-        int print_table(){return 0;}
-        int save_fig(const std::string& filename){return 0;}
+        template <typename... Args> int init(Args&... args){return 0;}
+        template <typename... Args> int plot(Args&... args){return 0;}
+        template <typename... Args> int init_summary(Args&... args) {return 0;}
+        template <typename... Args> int print_table(Args&... args){return 0;}
+        template <typename... Args> int save_fig(Args&... args){return 0;}
     };
     
     

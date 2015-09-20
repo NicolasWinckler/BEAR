@@ -251,8 +251,8 @@ namespace bear
         
         if(init_cond_range!=fCoef_range_i)
         {
-            LOG(ERROR)<<"i and j range index are different and should be the same.";
-            LOG(ERROR)<<"check the given cross-section coefficients in file "<<filename.string();
+            LOG(ERROR)<<"provided index range of initial conditions does not match the provided index range of coefficient";
+            //LOG(ERROR)<<"check the given cross-section coefficients in file "<<filename.string();
             return 1;
         }
         
@@ -296,9 +296,7 @@ namespace bear
             }
 
         size_t dim=fCoef_range_i.size();
-        size_t offset=fCoef_range_i.start();
-        size_t last_index=offset+dim-1;
-        
+        size_t offset=fCoef_range_i.start();        
 
         if (ui_type::fUse_cfgFile)
         {
@@ -315,12 +313,16 @@ namespace bear
 
         }
         
+        
         vector_d F0(dim); 
         for(const auto& p : fIni_cond_map)
         {
             F0(p.first-offset)=p.second;
         }
         fF0=F0;
+        
+        
+        
         return 0;
     }// end read_impl
     

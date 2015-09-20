@@ -33,7 +33,6 @@ namespace bear
         typedef std::vector<std::tuple<size_t, size_t, std::complex<double> > > complex_eigen_values;
         
         double fPRECISON;
-        bool fSimple_print;
         std::shared_ptr<bear_summary> fSummary;
     protected:
         std::map<std::size_t, std::string> fGeneral_solution;
@@ -42,8 +41,7 @@ namespace bear
     public:
         bear_analytic_solution() :  fPRECISON(1.e-15),
                                     fGeneral_solution(),
-                                    fUnit_convertor(1.),
-                                    fSimple_print(false)
+                                    fUnit_convertor(1.)
         {}
         virtual ~bear_analytic_solution(){}
 

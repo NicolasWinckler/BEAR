@@ -33,3 +33,12 @@ install_manifest.txt
 build/
 html/
 nbproject/
+data/output/
+data/config/
+data/input/
+temp/
+
+#others
+*.DS_Store
+
+
