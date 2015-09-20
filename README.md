@@ -43,6 +43,7 @@ Output non-equilibrium results are provided on demand in the form of :
 * distance-to-equilibrium computation
 * equilibrium solutions in pdf-figures
 * server and web interface
+* numerical error from matrix operations + error propagation from input cross-sections
 * multiple input files for ion-optics
 * simplify local installation
 * implement XML and JSON input-file parser
