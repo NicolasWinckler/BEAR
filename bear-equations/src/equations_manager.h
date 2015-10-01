@@ -54,12 +54,20 @@ namespace bear
         
         virtual ~equations_manager (){}
 
+        /*
+        // does not work for gcc < 5.2
         auto get_options() -> decltype(eq_type::fvarmap)
         {
             return eq_type::fvarmap;
         }
+        */
         
-        
+
+        variables_map get_options()
+        {
+            return eq_type::fvarmap;
+        }
+
         int init()
         {
             if(eq_type::init())
