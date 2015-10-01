@@ -11,6 +11,11 @@
 // std
 #include <complex>
 
+
+#if defined(__clang__)
+_Pragma("clang diagnostic push") 
+_Pragma("clang diagnostic ignored \"-Wshadow\"") 
+
 // boost
 #include <boost/numeric/ublas/symmetric.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -23,6 +28,27 @@
 #include "boost/numeric/bindings/traits/ublas_matrix.hpp"
 #include "boost/numeric/bindings/traits/ublas_vector.hpp"
 #include <boost/numeric/bindings/lapack/geev.hpp>
+_Pragma("clang diagnostic pop")
+
+#elif defined(__GNUC__) || defined(__GNUG__)    
+_Pragma("GCC diagnostic push")
+_Pragma("GCC diagnostic ignored \"-Wshadow\"")
+
+// boost
+#include <boost/numeric/ublas/symmetric.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/io.hpp>
+
+// bindings
+#include "boost/numeric/bindings/lapack/syev.hpp"
+#include "boost/numeric/bindings/lapack/gesvd.hpp"
+#include "boost/numeric/bindings/lapack/gesdd.hpp"
+#include "boost/numeric/bindings/traits/ublas_matrix.hpp"
+#include "boost/numeric/bindings/traits/ublas_vector.hpp"
+#include <boost/numeric/bindings/lapack/geev.hpp>
+
+_Pragma("GCC diagnostic pop")
+#endif    
 
 // bear
 #include "def.h"

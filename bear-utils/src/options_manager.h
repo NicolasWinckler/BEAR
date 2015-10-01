@@ -25,10 +25,6 @@
 #include <iterator>
 #include <tuple>
 
-// boost
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-
 // bear
 #include "logger.h"
 #include "def.h"

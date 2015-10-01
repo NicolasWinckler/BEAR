@@ -25,15 +25,16 @@ EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/solveDynamicEqRootAll
 set(INCLUDE_DIRECTORIES
 ${CMAKE_SOURCE_DIR}/bear-utils/src
 ${CMAKE_SOURCE_DIR}/bear-equations/src
+${CMAKE_SOURCE_DIR}/bear-matrix-operations
 ${CMAKE_SOURCE_DIR}/bear-matrix-operations/src
 ${CMAKE_SOURCE_DIR}/bear-tests/policy-impl
 )
 
 Set(SYSTEM_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIRS})
 
-if(LAPACK_FOUND AND BNB_FOUND)
+if(LAPACK_FOUND)
   set(INCLUDE_DIRECTORIES 
-      ${BNB_INCLUDE_DIR}
+      #${BNB_INCLUDE_DIR}
       ${INCLUDE_DIRECTORIES}
      )
   if(ROOT_FOUND)
@@ -42,7 +43,7 @@ if(LAPACK_FOUND AND BNB_FOUND)
             ${INCLUDE_DIRECTORIES}
            )
   endif(ROOT_FOUND)
-endif(LAPACK_FOUND AND BNB_FOUND)
+endif(LAPACK_FOUND)
 
 include_directories(${INCLUDE_DIRECTORIES})
 include_directories(${SYSTEM_INCLUDE_DIRECTORIES})
@@ -58,7 +59,7 @@ Set(SRCS run/runSolveSystemAtEquilibrium.cxx)
 Set(DEPENDENCIES bear_utils blas lapack gfortran)
 GENERATE_EXECUTABLE()
 
-if(LAPACK_FOUND AND BNB_FOUND)
+if(LAPACK_FOUND)
   Set(EXE_NAME runSolveSteadyEqLapack)
   Set(SRCS 
     run/runSolveSystemAtEquilibriumLapack.cxx
@@ -89,9 +90,13 @@ if(LAPACK_FOUND AND BNB_FOUND)
 
       Set(LINKDEF ${CMAKE_SOURCE_DIR}/bear-tests/policy-impl/sig_handlerLinkDef.h)
       Set(LIBRARY_NAME handle_root_signal)
-      Set(DEPENDENCIES Hist RIO Cint Core Gui Gpad)
 
-
+      if (ROOT_FOUND_VERSION LESS 59999)
+        Set(DEPENDENCIES Hist RIO Cint Core Gui Gpad)
+      else()
+        Set(DEPENDENCIES Hist RIO Cling Core Gui Gpad)
+      endif()
+      
       GENERATE_LIBRARY()
 
       Set(EXE_NAME runSolveDynEqRoot)
@@ -100,9 +105,16 @@ if(LAPACK_FOUND AND BNB_FOUND)
       )
       #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
       #set(LIBS_MAP_LAPACK "LAPACK")
-      Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
-         Hist Graf Gpad RIO Cint Core handle_root_signal
-         )
+      if (ROOT_FOUND_VERSION LESS 59999)
+        Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
+           Hist Graf Gpad RIO Cint Core handle_root_signal
+           )
+      else()
+        Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
+           Hist Graf Gpad RIO Cling Core handle_root_signal
+           )
+      endif()
+      
       GENERATE_EXECUTABLE()
 
 
@@ -113,13 +125,19 @@ if(LAPACK_FOUND AND BNB_FOUND)
       )
       #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
       #set(LIBS_MAP_LAPACK "LAPACK")
-      Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
-         Hist Graf Gpad RIO Cint Core handle_root_signal
-         )
+      if (ROOT_FOUND_VERSION LESS 59999)
+        Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
+           Hist Graf Gpad RIO Cint Core handle_root_signal
+           )
+      else()
+        Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES}
+           Hist Graf Gpad RIO Cling Core handle_root_signal
+           )
+      endif()
       GENERATE_EXECUTABLE()
 
 
   endif(ROOT_FOUND)
 
-endif(LAPACK_FOUND AND BNB_FOUND)
+endif(LAPACK_FOUND)
 

@@ -31,7 +31,7 @@ namespace bear
         //2.73159734(12)×1026 (lb-mol)−1
         //1.707248434(77)×1025 (oz-mol)−1
         std::map<std::string,bear::severity_level> fSeverity_map; 
-        
+        using options_manager::fvarmap;
      public:
 
         bear_user_interface() : options_manager(), 

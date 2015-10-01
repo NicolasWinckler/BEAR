@@ -130,10 +130,8 @@ EndIf (Boost_FOUND)
 
 
 find_package(LAPACK)
-find_package(BoostNumBinding)
-if(BNB_FOUND)
+#find_package(BoostNumBinding)
 
-endif(BNB_FOUND)
 # Set the library version in the main CMakeLists.txt
 SET(BEAR_MAJOR_VERSION 0)
 SET(BEAR_MINOR_VERSION 0)
@@ -166,7 +164,7 @@ Set(SYSTEM_INCLUDE_DIRECTORIES
     ${Boost_INCLUDE_DIRS}
   )  
 
-add_subdirectory(bear-doc)
+#add_subdirectory(bear-doc)
 
 If (Boost_FOUND)
     add_subdirectory(bear-utils)

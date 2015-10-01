@@ -8,13 +8,34 @@
 #ifndef DEF_H
 #define	DEF_H
     
+
+
+#if defined(__clang__)
+
+_Pragma("clang diagnostic push") 
+_Pragma("clang diagnostic ignored \"-Wshadow\"") 
+
 // boost
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
-
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
+
+_Pragma("clang diagnostic pop")
+#elif defined(__GNUC__) || defined(__GNUG__)    
+_Pragma("GCC diagnostic push")
+_Pragma("GCC diagnostic ignored \"-Wshadow\"")
+
+// boost
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+#include <boost/numeric/ublas/io.hpp>
+
+_Pragma("GCC diagnostic pop")
+#endif
 
 #include <map>
 #include <memory>

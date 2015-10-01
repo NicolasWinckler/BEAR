@@ -9,16 +9,13 @@
 
 #include <boost/log/core/core.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/support/date_time.hpp>
-#include <boost/core/null_deleter.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/core/null_deleter.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
+ 
 #include <fstream>
 #include <ostream>
 
@@ -40,11 +37,11 @@ BOOST_LOG_GLOBAL_LOGGER_INIT(global_logger, src::severity_logger_mt)
     return global_logger;
 }
 
-typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+
 void init_log_console()
 {
     // add a text sink
-    
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
     boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
     // add "console" output stream to our sink
     sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
@@ -59,6 +56,7 @@ void init_log_console(custom_severity_level threshold, log_op::operation op)
 {
     // add a text sink
     //typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
     logging::core::get()->remove_all_sinks();
     boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
     // add "console" output stream to our sink
