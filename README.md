@@ -67,8 +67,9 @@ C++11 Compiler:
 Third party libraries:
 
 * boost>=1.56 (required)
-* boost-numeric-bindings and Lapack>=3.5 (required for non-equilibrium solutions)
-* Root>=5.32 (required for non-equilibrium solutions)
+* Lapack>=3.5 (required for non-equilibrium solutions)
+    * on linux use e.g. sudo apt-get install liblapack-dev
+* Root 5.3x (required for non-equilibrium solutions)
 
 #### 2. Install [BEAR](https://github.com/NicolasWinckler/BEAR)
 
@@ -82,6 +83,7 @@ Third party libraries:
     cd BEAR
     mkdir build
     cd build
+    cmake ..
     make
 
 ## Licence 
