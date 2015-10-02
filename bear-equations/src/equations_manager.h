@@ -40,7 +40,7 @@ namespace bear
         typedef equations_manager<T,U,V,W>           self_type;  // this type
         
         std::shared_ptr<bear_summary> fSummary;
-        
+        using eq_type::fvarmap;
     public:
         
         equations_manager () :  eq_type(), solve_eq_type(), gui_type()
@@ -54,19 +54,13 @@ namespace bear
         
         virtual ~equations_manager (){}
 
-        /*
         // does not work for gcc < 5.2
-        auto get_options() -> decltype(eq_type::fvarmap)
+        auto get_options() -> decltype(fvarmap)
         {
-            return eq_type::fvarmap;
+            return fvarmap;
         }
-        */
         
 
-        variables_map get_options()
-        {
-            return eq_type::fvarmap;
-        }
 
         int init()
         {
