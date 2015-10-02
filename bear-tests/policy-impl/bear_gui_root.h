@@ -18,6 +18,7 @@
 #include <limits>       // std::numeric_limits
 
 #include "TF1.h"
+#include "TFormula.h"
 #include "TH1D.h"
 #include "TCanvas.h"
 #include "TAxis.h"
@@ -211,7 +212,9 @@ namespace bear
                 fFunctions[p.first] = std::make_shared<TF1>(name.c_str(), p.second.c_str(), fXmin, fXmax);
                 fFunctions.at(p.first)->SetNpx(fNpoint);
                 fFunctions.at(p.first)->SetLineColor(p.first+1);
+                #ifdef __CINT__
                 fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst);
+                #endif
                 fLegend->AddEntry(fFunctions[p.first].get(), name.c_str());
             }
             return 0;

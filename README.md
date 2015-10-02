@@ -69,7 +69,7 @@ Third party libraries:
 * boost>=1.56 (required)
 * Lapack>=3.5 (required for non-equilibrium solutions)
     * on linux use e.g. sudo apt-get install liblapack-dev
-* Root 5.3x (required for non-equilibrium solutions)
+* Root 5.3x or Root >= 6.04(required for non-equilibrium solutions)
 
 #### 2. Install [BEAR](https://github.com/NicolasWinckler/BEAR)
 
