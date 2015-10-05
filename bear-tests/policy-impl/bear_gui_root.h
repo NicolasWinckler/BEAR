@@ -19,6 +19,7 @@
 
 #include "TF1.h"
 #include "TFormula.h"
+#include "TGraph.h"
 #include "TH1D.h"
 #include "TCanvas.h"
 #include "TAxis.h"
@@ -37,9 +38,11 @@ namespace bear
         
         enum method {kDiagonalization,kRungeKutta};
         
-        bear_gui_root() :   fCanvas(nullptr), 
-                            fLegend(nullptr),   
-                            fFunctions(),   
+        bear_gui_root() :   fCanvas_non_equilib(nullptr), 
+                            fCanvas_equilib(nullptr),
+                            fLegend(nullptr),
+                            fEquilibrium_solutions(nullptr),
+                            fFunctions(),
                             fXmin(0.),  
                             fXmax(20.),     
                             fYmin(0.),  
@@ -55,8 +58,10 @@ namespace bear
         }
         virtual ~bear_gui_root()
         {
-            fCanvas.reset();
+            fCanvas_non_equilib.reset();
+            fCanvas_equilib.reset();
             fLegend.reset();
+            fEquilibrium_solutions.reset();
         }
         
         int init(const variables_map& vm,const variables_map& vm2)
@@ -203,7 +208,7 @@ namespace bear
             
             
             fMethod=kDiagonalization;
-            //fCanvas = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
+            //fCanvas_non_equilib = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
             
             
             for(const auto& p : input_functions)
@@ -213,7 +218,7 @@ namespace bear
                 fFunctions.at(p.first)->SetNpx(fNpoint);
                 fFunctions.at(p.first)->SetLineColor(p.first+1);
                 #ifdef __CINT__
-                fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst);
+                fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst); // deprecated in root 6
                 #endif
                 fLegend->AddEntry(fFunctions[p.first].get(), name.c_str());
             }
@@ -225,7 +230,7 @@ namespace bear
             fMethod=kRungeKutta;
             fTitle+=" (Runge Kutta method)";
             fHistograms=input_functions;
-            fCanvas = std::make_shared<TCanvas>("c1RK","Solutions - Runge Kutta",800,600);
+            fCanvas_non_equilib = std::make_shared<TCanvas>("c1RK","Solutions - Runge Kutta",800,600);
             
             for(auto& p : fHistograms)
             {
@@ -257,7 +262,7 @@ namespace bear
         
         int save_fig(const std::string& filename)
         {
-            fCanvas->SaveAs(filename.c_str());
+            fCanvas_non_equilib->SaveAs(filename.c_str());
             return 0;
         }
         
@@ -268,14 +273,14 @@ namespace bear
         {
             LOG(DEBUG)<<"GUI start";
             
-            fCanvas = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
+            fCanvas_non_equilib = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
             
             
             if(fMethod!=kRungeKutta && fMethod!=kDiagonalization)
                 throw std::runtime_error("Unrecognized method to solve the equations");
             
-            fSingal_handler.set_canvas(fCanvas.get());
-            fCanvas->SetLogx();
+            fSingal_handler.set_canvas(fCanvas_non_equilib.get());
+            fCanvas_non_equilib->SetLogx();
             for(auto& p : container_map)
             {
                 
@@ -300,7 +305,7 @@ namespace bear
                 }
             }
 
-            //fCanvas->SetLogx();
+            //fCanvas_non_equilib->SetLogx();
             fLegend->Draw();
             
             
@@ -312,12 +317,62 @@ namespace bear
                 save_fig(fOut_fig_filename);
                 LOG(INFO)<<" ";
             }
+
+
+            bool plot_eq=true;
+            if(plot_eq)
+            {
+                std::size_t dim=fSummary->equilibrium_solutions.size(); 
+                const std::size_t max_dim=200;
+                Double_t x[max_dim], y[max_dim];
+                
+                if(dim>max_dim)
+                {
+                    LOG(ERROR)<< "The dimension of the system is limited to N=200";
+                    return 1;
+                }
+                std::size_t i(0);
+                for(const auto& p : fSummary->equilibrium_solutions)
+                {
+                    double Fi=p.second;
+                    double qi=fSummary->F_index_map.at(p.first);
+
+                    x[i]=qi;
+                    y[i]=Fi;
+                    //mean+=qi*Fi;
+                    //sum+=Fi;
+                    //LOG(ERROR)  << "F"
+                    //              << std::to_string(fSummary->F_index_map.at(p.first))
+                    //              << " = "
+                    //              << Fi;
+                }
+                fCanvas_equilib = std::make_shared<TCanvas>("c1equi","Solutions at equilibrium",800,600);
+            
+                fEquilibrium_solutions = std::make_shared<TGraph>(max_dim,x,y);
+                fEquilibrium_solutions->Draw();
+                for(const auto& p : fSummary->equilibrium_solutions)
+                {
+                    double Fi=p.second;
+                    double qi=fSummary->F_index_map.at(p.first);
+                    //mean+=qi*Fi;
+                    //sum+=Fi;
+                    LOG(ERROR)  << "F"
+                                  << std::to_string(fSummary->F_index_map.at(p.first))
+                                  << " = "
+                                  << Fi;
+                }
+            }
+
+
+
             return 0;
         }
         
     private:
-        std::shared_ptr<TCanvas> fCanvas;
+        std::shared_ptr<TCanvas> fCanvas_non_equilib;
+        std::shared_ptr<TCanvas> fCanvas_equilib;
         std::shared_ptr<TLegend> fLegend;
+        std::shared_ptr<TGraph>  fEquilibrium_solutions;
         //TF1 *fa1;
         std::map<std::size_t, std::string> fInput;
         //std::map<std::size_t, TF1*> fFunctions;
