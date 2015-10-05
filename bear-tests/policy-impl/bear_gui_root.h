@@ -19,10 +19,12 @@
 
 #include "TF1.h"
 #include "TFormula.h"
+#include "TGraph.h"
 #include "TH1D.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "TLegend.h"
+
 
 #include "logger.h"
 #include "def.h"
@@ -37,9 +39,12 @@ namespace bear
         
         enum method {kDiagonalization,kRungeKutta};
         
-        bear_gui_root() :   fCanvas(nullptr), 
-                            fLegend(nullptr),   
-                            fFunctions(),   
+        bear_gui_root() :   fCanvas_non_equilib(nullptr), 
+                            fCanvas_equilib(nullptr),
+                            fLegend(nullptr),
+                            fLegend_eq(nullptr),
+                            fEquilibrium_solutions(nullptr),
+                            fFunctions(),
                             fXmin(0.),  
                             fXmax(20.),     
                             fYmin(0.),  
@@ -50,13 +55,23 @@ namespace bear
                             fMaxconst(100000),
                             fFunctions_derivative(),
                             fSingal_handler(),
-                            fOut_fig_filename()
+                            fOut_fig_filename(),
+                            fOut_fig_e_filename(),
+                            fCharge(nullptr),
+                            fFraction(nullptr),
+                            fSave_ne(false),
+                            fSave_e(false)
         {
         }
         virtual ~bear_gui_root()
         {
-            fCanvas.reset();
+            fCanvas_non_equilib.reset();
+            fCanvas_equilib.reset();
             fLegend.reset();
+            fLegend_eq.reset();
+            fEquilibrium_solutions.reset();
+            delete[] fCharge;
+            delete[] fFraction;
         }
         
         int init(const variables_map& vm,const variables_map& vm2)
@@ -102,6 +117,7 @@ namespace bear
             
             fLegend = std::make_shared<TLegend>(0.4,0.7,0.9,0.9);
             fLegend->SetNColumns(4);
+            fLegend_eq = std::make_shared<TLegend>(0.1,0.7,0.4,0.9);
 
             LOG(DEBUG)<<"init(variable_map)";
             fMaxop=vm2.at("formula-maximum-operator").template as<int>();
@@ -110,17 +126,21 @@ namespace bear
             
             fs::path input=vm2["input-file"].template as<fs::path>();
             std::string filename=input.stem().string();
-            std::string output=vm2["output-directory"].template as<fs::path>().string();
-            output+="/Bear-results-figure-ne-";
-            output+=filename;
-            output+=".pdf";
+            std::string outputdir=vm2["output-directory"].template as<fs::path>().string();
+            fOut_fig_e_filename=outputdir;
+            fOut_fig_filename=outputdir;
+
+            fOut_fig_filename+="/Bear-results-figure-ne-";
+            fOut_fig_filename+=filename;// pdf/root extension added later
+
+            fOut_fig_e_filename+="/Bear-results-figure-e-";
+            fOut_fig_e_filename+=filename;// pdf/root extension added later
+
+            //output+=".root";
             //LOG(INFO)<<"save figure to : "<<output;
             
             fSave_ne=vm2["save-fig-ne"].template as<bool>();
-            
-            
-            fOut_fig_filename=output;            
-            
+            fSave_e=vm2["save-fig-e"].template as<bool>();
             return 0;
         }
 
@@ -203,7 +223,7 @@ namespace bear
             
             
             fMethod=kDiagonalization;
-            //fCanvas = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
+            //fCanvas_non_equilib = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
             
             
             for(const auto& p : input_functions)
@@ -213,7 +233,7 @@ namespace bear
                 fFunctions.at(p.first)->SetNpx(fNpoint);
                 fFunctions.at(p.first)->SetLineColor(p.first+1);
                 #ifdef __CINT__
-                fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst);
+                fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst); // deprecated in root 6
                 #endif
                 fLegend->AddEntry(fFunctions[p.first].get(), name.c_str());
             }
@@ -225,7 +245,7 @@ namespace bear
             fMethod=kRungeKutta;
             fTitle+=" (Runge Kutta method)";
             fHistograms=input_functions;
-            fCanvas = std::make_shared<TCanvas>("c1RK","Solutions - Runge Kutta",800,600);
+            fCanvas_non_equilib = std::make_shared<TCanvas>("c1RK","Solutions - Runge Kutta",800,600);
             
             for(auto& p : fHistograms)
             {
@@ -257,25 +277,30 @@ namespace bear
         
         int save_fig(const std::string& filename)
         {
-            fCanvas->SaveAs(filename.c_str());
+            fCanvas_non_equilib->SaveAs(filename.c_str());
             return 0;
         }
         
-        
+        int save_fig_equilibrium(const std::string& filename)
+        {
+            fCanvas_equilib->SaveAs(filename.c_str());
+            return 0;
+        }
         
         template <typename T>
         int draw(std::map<std::size_t,T>& container_map)
         {
             LOG(DEBUG)<<"GUI start";
             
-            fCanvas = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
+            fCanvas_non_equilib = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
             
             
             if(fMethod!=kRungeKutta && fMethod!=kDiagonalization)
                 throw std::runtime_error("Unrecognized method to solve the equations");
             
-            fSingal_handler.set_canvas(fCanvas.get());
-            fCanvas->SetLogx();
+            fSingal_handler.set_canvas(fCanvas_non_equilib.get());
+
+            fCanvas_non_equilib->SetLogx();
             for(auto& p : container_map)
             {
                 
@@ -300,7 +325,7 @@ namespace bear
                 }
             }
 
-            //fCanvas->SetLogx();
+            //fCanvas_non_equilib->SetLogx();
             fLegend->Draw();
             
             
@@ -308,16 +333,153 @@ namespace bear
             {
                 LOG(INFO)<<" ";
                 LOG(STATE)<<"saving to figure ...";
-                LOG(INFO)<<"- saving figure of non-equilibrium solutions to : "<<fOut_fig_filename;
-                save_fig(fOut_fig_filename);
+                LOG(INFO)<<"- saving figure of non-equilibrium solutions to : ";//<<fOut_fig_filename;
+                save_fig(fOut_fig_filename+".pdf");
+                save_fig(fOut_fig_filename+".root");
                 LOG(INFO)<<" ";
             }
+
+
+            bool plot_eq=true;
+            if(plot_eq)
+            {
+                std::size_t dim=fSummary->equilibrium_solutions.size(); 
+                const Int_t max_dim=15;
+                Double_t x[max_dim], y[max_dim];
+                fCharge = new double[dim];
+                fFraction = new double[dim];
+
+                
+                if(dim>max_dim)
+                {
+                    LOG(ERROR)<< "The dimension of the system is limited to N=200";
+                    return 1;
+                }
+
+                if(dim==0)
+                {
+                    LOG(ERROR)<< "The dimension of the system is zero, check input file";
+                    return 1;
+                }
+
+                std::size_t i(0);
+                double charge_start;
+                double charge_end;
+                double mean=0.;
+                double sum=0.;
+                for(const auto& p : fSummary->equilibrium_solutions)
+                {
+                    double Fi=p.second;
+                    double qi=fSummary->F_index_map.at(p.first);
+
+
+                    fCharge[i]=qi;
+                    fFraction[i]=Fi;
+                    mean+=qi*Fi;
+                    i++;
+                    //mean+=qi*Fi;
+                    sum+=Fi;
+                    //LOG(ERROR)  << "F"
+                    //              << std::to_string(fSummary->F_index_map.at(p.first))
+                    //              << " = "
+                    //              << Fi;
+                }
+
+                double variance=0.;
+                for(const auto& p : fSummary->equilibrium_solutions)
+                {
+                    double Fi=p.second;
+                    double qi=fSummary->F_index_map.at(p.first);
+                    double temp=(qi-mean);
+                    int N=static_cast<int>(dim);
+                    variance+=temp*temp/N;
+                }
+
+                double sigma=std::sqrt(variance);
+
+
+                charge_start=fCharge[0]-1;
+                charge_end=fCharge[dim-1]+1;
+
+                fCanvas_equilib = std::make_shared<TCanvas>("c1equi","Solutions at equilibrium",800,600);
+                fSingal_handler.set_canvas2(fCanvas_equilib.get());
+                fEquilibrium_solutions = std::make_shared<TGraph>(dim,fCharge,fFraction);
+
+                fEquilibrium_solutions->SetLineColor(4);
+                fEquilibrium_solutions->SetLineWidth(2);
+                fEquilibrium_solutions->SetMarkerColor(2);
+                fEquilibrium_solutions->SetMarkerSize(1.5);
+                fEquilibrium_solutions->SetMarkerStyle(20);
+                std::string graph_title=fTitle+" (equilibrium)";
+                fEquilibrium_solutions->SetTitle(graph_title.c_str());
+
+
+                fEquilibrium_solutions->GetXaxis()->CenterTitle();
+                fEquilibrium_solutions->GetYaxis()->CenterTitle();
+                
+                fEquilibrium_solutions->GetXaxis()->SetTitleOffset(1.2);
+                fEquilibrium_solutions->GetYaxis()->SetTitleOffset(1.2);
+                fEquilibrium_solutions->GetXaxis()->SetTitle("Charge q");
+                fEquilibrium_solutions->GetXaxis()->SetRangeUser(charge_start,charge_end);
+
+                fEquilibrium_solutions->GetYaxis()->SetTitle("Fractions");
+
+                fEquilibrium_solutions->Draw("ALP");
+                std::string graph_legend("#splitline{Equilibrium charge}{state distribution}");
+                
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                fLegend_eq->AddEntry(fEquilibrium_solutions.get(),graph_legend.c_str(),"lp");
+                
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                graph_legend="<q> = "+std::to_string(mean);
+                fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
+
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                graph_legend="#sigma = "+std::to_string(sigma);
+                fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                
+                for(const auto& p : fSummary->equilibrium_solutions)
+                {
+                    double Fi=p.second;
+                    double qi=fSummary->F_index_map.at(p.first);
+                    //mean+=qi*Fi;
+                    //sum+=Fi;
+                    LOG(DEBUG)    << "mean = "<< mean << " F"
+                                  << std::to_string(fSummary->F_index_map.at(p.first))
+                                  << " = "
+                                  << Fi;
+                }
+
+                fLegend_eq->Draw();
+
+                if(fSave_e)
+                {
+                    
+                    if(!fSave_ne)
+                    {
+                        LOG(INFO)<<" ";
+                        LOG(STATE)<<"saving to figure ...";
+                    }
+
+                    LOG(INFO)<<"- saving figure of equilibrium solutions to : ";//<<fOut_fig_e_filename;
+                    save_fig(fOut_fig_e_filename+".pdf");
+                    save_fig(fOut_fig_e_filename+".root");
+                    LOG(INFO)<<" ";
+                }
+            }
+
+
+
             return 0;
         }
         
     private:
-        std::shared_ptr<TCanvas> fCanvas;
+        std::shared_ptr<TCanvas> fCanvas_non_equilib;
+        std::shared_ptr<TCanvas> fCanvas_equilib;
         std::shared_ptr<TLegend> fLegend;
+        std::shared_ptr<TLegend> fLegend_eq;
+        std::shared_ptr<TGraph>  fEquilibrium_solutions;
         //TF1 *fa1;
         std::map<std::size_t, std::string> fInput;
         //std::map<std::size_t, TF1*> fFunctions;
@@ -340,7 +502,12 @@ namespace bear
         
         handle_root_signal fSingal_handler;
         std::string fOut_fig_filename;
+        std::string fOut_fig_e_filename;
+        
+        double* fCharge;     // for equilibrium solution
+        double* fFraction;   // for equilibrium solution 
         bool fSave_ne;
+        bool fSave_e;
         // 
     };
 }

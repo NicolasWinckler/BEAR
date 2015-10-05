@@ -23,6 +23,12 @@ int handle_root_signal::set_canvas(TCanvas* canvas)
     fCanvas->Connect("Closed()","handle_root_signal",this,"exit_root()");
 }
 
+int handle_root_signal::set_canvas2(TCanvas* canvas)
+{
+    fCanvas2=canvas;
+    fCanvas2->Connect("Closed()","handle_root_signal",this,"exit_root()");
+}
+
 int handle_root_signal::exit_root()
 {
     gApplication->Terminate(0);

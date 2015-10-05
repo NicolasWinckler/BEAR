@@ -90,7 +90,7 @@ inline std::string write_in(const std::string& text_in_bold)
 // typedef
 typedef bear::severity_level custom_severity_level;
 #define SEVERITY_THRESHOLD custom_severity_level::MAXDEBUG
-
+#define SEVERITY_ERROR custom_severity_level::ERROR
 // tags used for log console or file formatting
 struct tag_console;
 struct tag_file;

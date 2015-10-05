@@ -561,11 +561,13 @@ namespace bear
             // add the last one (1-sum)
             fEquilibrium_solution(neg_Fi.size())=FN;
             sum+=FN;
-            
+            mean_charge+=fSummary->F_index_map.at(neg_Fi.size())*FN;
             fSummary->equilibrium_solutions[neg_Fi.size()]=FN;
             size_t  last_index = neg_Fi.size()+1;
             
             LOG(INFO)<<"F"<< fSummary->F_index_map.at(neg_Fi.size())<<" = "<<fEquilibrium_solution(neg_Fi.size());
+            
+
             LOG(INFO)<<"sum = "<< sum;
             
             LOG(INFO)<<"<q> = "<< mean_charge;

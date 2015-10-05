@@ -54,7 +54,6 @@ namespace bear
         
         virtual ~equations_manager (){}
 
-        // does not work for gcc < 5.2
         auto get_options() -> decltype(fvarmap)
         {
             return fvarmap;
@@ -181,10 +180,10 @@ namespace bear
                     double qi=fSummary->F_index_map.at(p.first);
                     mean+=qi*Fi;
                     sum+=Fi;
-                    LOG(RESULTS)  << "F"
-                                << std::to_string(fSummary->F_index_map.at(p.first))
-                                << " = "
-                                << Fi;
+                    LOG(RESULTS)    << "F"
+                                    << std::to_string(fSummary->F_index_map.at(p.first))
+                                    << " = "
+                                    << Fi;
                 }
                 LOG(RESULTS)<<"sum = "<<sum;
                 LOG(RESULTS)<<"<q> = "<<mean;
