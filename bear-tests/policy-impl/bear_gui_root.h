@@ -388,7 +388,7 @@ namespace bear
                 fEquilibrium_solutions->SetLineWidth(2);
                 fEquilibrium_solutions->SetMarkerColor(2);
                 fEquilibrium_solutions->SetMarkerSize(1.5);
-                fEquilibrium_solutions->SetMarkerStyle(21);
+                fEquilibrium_solutions->SetMarkerStyle(20);
                 fEquilibrium_solutions->SetTitle("Asymptotic limit of charge state distribution");
 
 
