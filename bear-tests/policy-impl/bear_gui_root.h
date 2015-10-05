@@ -53,7 +53,12 @@ namespace bear
                             fMaxconst(100000),
                             fFunctions_derivative(),
                             fSingal_handler(),
-                            fOut_fig_filename()
+                            fOut_fig_filename(),
+                            fOut_fig_e_filename(),
+                            fCharge(nullptr),
+                            fFraction(nullptr),
+                            fSave_ne(false),
+                            fSave_e(false)
         {
         }
         virtual ~bear_gui_root()
@@ -62,6 +67,8 @@ namespace bear
             fCanvas_equilib.reset();
             fLegend.reset();
             fEquilibrium_solutions.reset();
+            delete[] fCharge;
+            delete[] fFraction;
         }
         
         int init(const variables_map& vm,const variables_map& vm2)
@@ -115,17 +122,21 @@ namespace bear
             
             fs::path input=vm2["input-file"].template as<fs::path>();
             std::string filename=input.stem().string();
-            std::string output=vm2["output-directory"].template as<fs::path>().string();
-            output+="/Bear-results-figure-ne-";
-            output+=filename;
-            output+=".pdf";
+            std::string outputdir=vm2["output-directory"].template as<fs::path>().string();
+            fOut_fig_e_filename=outputdir;
+            fOut_fig_filename=outputdir;
+
+            fOut_fig_filename+="/Bear-results-figure-ne-";
+            fOut_fig_filename+=filename;// pdf/root extension added later
+
+            fOut_fig_e_filename+="/Bear-results-figure-e-";
+            fOut_fig_e_filename+=filename;// pdf/root extension added later
+
+            //output+=".root";
             //LOG(INFO)<<"save figure to : "<<output;
             
             fSave_ne=vm2["save-fig-ne"].template as<bool>();
-            
-            
-            fOut_fig_filename=output;            
-            
+            fSave_e=vm2["save-fig-e"].template as<bool>();
             return 0;
         }
 
@@ -266,7 +277,11 @@ namespace bear
             return 0;
         }
         
-        
+        int save_fig_equilibrium(const std::string& filename)
+        {
+            fCanvas_equilib->SaveAs(filename.c_str());
+            return 0;
+        }
         
         template <typename T>
         int draw(std::map<std::size_t,T>& container_map)
@@ -280,6 +295,7 @@ namespace bear
                 throw std::runtime_error("Unrecognized method to solve the equations");
             
             fSingal_handler.set_canvas(fCanvas_non_equilib.get());
+
             fCanvas_non_equilib->SetLogx();
             for(auto& p : container_map)
             {
@@ -313,8 +329,9 @@ namespace bear
             {
                 LOG(INFO)<<" ";
                 LOG(STATE)<<"saving to figure ...";
-                LOG(INFO)<<"- saving figure of non-equilibrium solutions to : "<<fOut_fig_filename;
-                save_fig(fOut_fig_filename);
+                LOG(INFO)<<"- saving figure of non-equilibrium solutions to : ";//<<fOut_fig_filename;
+                save_fig(fOut_fig_filename+".pdf");
+                save_fig(fOut_fig_filename+".root");
                 LOG(INFO)<<" ";
             }
 
@@ -323,22 +340,35 @@ namespace bear
             if(plot_eq)
             {
                 std::size_t dim=fSummary->equilibrium_solutions.size(); 
-                const std::size_t max_dim=200;
+                const Int_t max_dim=15;
                 Double_t x[max_dim], y[max_dim];
+                fCharge = new double[dim];
+                fFraction = new double[dim];
+
                 
                 if(dim>max_dim)
                 {
                     LOG(ERROR)<< "The dimension of the system is limited to N=200";
                     return 1;
                 }
+
+                if(dim==0)
+                {
+                    LOG(ERROR)<< "The dimension of the system is zero, check input file";
+                    return 1;
+                }
+
                 std::size_t i(0);
+                double charge_start;
+                double charge_end;
                 for(const auto& p : fSummary->equilibrium_solutions)
                 {
                     double Fi=p.second;
                     double qi=fSummary->F_index_map.at(p.first);
 
-                    x[i]=qi;
-                    y[i]=Fi;
+                    fCharge[i]=qi;
+                    fFraction[i]=Fi;
+                    i++;
                     //mean+=qi*Fi;
                     //sum+=Fi;
                     //LOG(ERROR)  << "F"
@@ -346,20 +376,59 @@ namespace bear
                     //              << " = "
                     //              << Fi;
                 }
+
+                charge_start=fCharge[0]-1;
+                charge_end=fCharge[dim-1]+1;
+
                 fCanvas_equilib = std::make_shared<TCanvas>("c1equi","Solutions at equilibrium",800,600);
-            
-                fEquilibrium_solutions = std::make_shared<TGraph>(max_dim,x,y);
-                fEquilibrium_solutions->Draw();
+                fSingal_handler.set_canvas2(fCanvas_equilib.get());
+                fEquilibrium_solutions = std::make_shared<TGraph>(dim,fCharge,fFraction);
+
+                fEquilibrium_solutions->SetLineColor(4);
+                fEquilibrium_solutions->SetLineWidth(2);
+                fEquilibrium_solutions->SetMarkerColor(2);
+                fEquilibrium_solutions->SetMarkerSize(1.5);
+                fEquilibrium_solutions->SetMarkerStyle(21);
+                fEquilibrium_solutions->SetTitle("Asymptotic limit of charge state distribution");
+
+
+                fEquilibrium_solutions->GetXaxis()->CenterTitle();
+                fEquilibrium_solutions->GetYaxis()->CenterTitle();
+                
+                fEquilibrium_solutions->GetXaxis()->SetTitleOffset(1.2);
+                fEquilibrium_solutions->GetYaxis()->SetTitleOffset(1.2);
+                fEquilibrium_solutions->GetXaxis()->SetTitle("Charge q");
+                fEquilibrium_solutions->GetXaxis()->SetRangeUser(charge_start,charge_end);
+
+                fEquilibrium_solutions->GetYaxis()->SetTitle("Fractions");
+
+                fEquilibrium_solutions->Draw("ALP");
                 for(const auto& p : fSummary->equilibrium_solutions)
                 {
                     double Fi=p.second;
                     double qi=fSummary->F_index_map.at(p.first);
                     //mean+=qi*Fi;
                     //sum+=Fi;
-                    LOG(ERROR)  << "F"
+                    LOG(DEBUG)  << "dim = "<< dim << " F"
                                   << std::to_string(fSummary->F_index_map.at(p.first))
                                   << " = "
                                   << Fi;
+                }
+
+
+                if(fSave_e)
+                {
+                    
+                    if(!fSave_ne)
+                    {
+                        LOG(INFO)<<" ";
+                        LOG(STATE)<<"saving to figure ...";
+                    }
+
+                    LOG(INFO)<<"- saving figure of equilibrium solutions to : ";//<<fOut_fig_e_filename;
+                    save_fig(fOut_fig_e_filename+".pdf");
+                    save_fig(fOut_fig_e_filename+".root");
+                    LOG(INFO)<<" ";
                 }
             }
 
@@ -395,7 +464,12 @@ namespace bear
         
         handle_root_signal fSingal_handler;
         std::string fOut_fig_filename;
+        std::string fOut_fig_e_filename;
+        
+        double* fCharge;     // for equilibrium solution
+        double* fFraction;   // for equilibrium solution 
         bool fSave_ne;
+        bool fSave_e;
         // 
     };
 }

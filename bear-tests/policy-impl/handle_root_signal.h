@@ -24,11 +24,12 @@ public:
     virtual ~handle_root_signal();
     
     int set_canvas(TCanvas* canvas);
+    int set_canvas2(TCanvas* canvas);
     int exit_root();
 private:
 
     TCanvas* fCanvas;
-    
+    TCanvas* fCanvas2;
     ClassDef(handle_root_signal, 0);
 };
 
