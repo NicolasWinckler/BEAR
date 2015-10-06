@@ -25,6 +25,7 @@
 #include "TAxis.h"
 #include "TLegend.h"
 
+
 #include "logger.h"
 #include "def.h"
 #include "handle_root_signal.h"
@@ -41,6 +42,7 @@ namespace bear
         bear_gui_root() :   fCanvas_non_equilib(nullptr), 
                             fCanvas_equilib(nullptr),
                             fLegend(nullptr),
+                            fLegend_eq(nullptr),
                             fEquilibrium_solutions(nullptr),
                             fFunctions(),
                             fXmin(0.),  
@@ -66,6 +68,7 @@ namespace bear
             fCanvas_non_equilib.reset();
             fCanvas_equilib.reset();
             fLegend.reset();
+            fLegend_eq.reset();
             fEquilibrium_solutions.reset();
             delete[] fCharge;
             delete[] fFraction;
@@ -114,6 +117,7 @@ namespace bear
             
             fLegend = std::make_shared<TLegend>(0.4,0.7,0.9,0.9);
             fLegend->SetNColumns(4);
+            fLegend_eq = std::make_shared<TLegend>(0.1,0.7,0.4,0.9);
 
             LOG(DEBUG)<<"init(variable_map)";
             fMaxop=vm2.at("formula-maximum-operator").template as<int>();
@@ -361,21 +365,38 @@ namespace bear
                 std::size_t i(0);
                 double charge_start;
                 double charge_end;
+                double mean=0.;
+                double sum=0.;
                 for(const auto& p : fSummary->equilibrium_solutions)
                 {
                     double Fi=p.second;
                     double qi=fSummary->F_index_map.at(p.first);
 
+
                     fCharge[i]=qi;
                     fFraction[i]=Fi;
+                    mean+=qi*Fi;
                     i++;
                     //mean+=qi*Fi;
-                    //sum+=Fi;
+                    sum+=Fi;
                     //LOG(ERROR)  << "F"
                     //              << std::to_string(fSummary->F_index_map.at(p.first))
                     //              << " = "
                     //              << Fi;
                 }
+
+                double variance=0.;
+                for(const auto& p : fSummary->equilibrium_solutions)
+                {
+                    double Fi=p.second;
+                    double qi=fSummary->F_index_map.at(p.first);
+                    double temp=(qi-mean);
+                    int N=static_cast<int>(dim);
+                    variance+=temp*temp/N;
+                }
+
+                double sigma=std::sqrt(variance);
+
 
                 charge_start=fCharge[0]-1;
                 charge_end=fCharge[dim-1]+1;
@@ -389,7 +410,8 @@ namespace bear
                 fEquilibrium_solutions->SetMarkerColor(2);
                 fEquilibrium_solutions->SetMarkerSize(1.5);
                 fEquilibrium_solutions->SetMarkerStyle(20);
-                fEquilibrium_solutions->SetTitle("Asymptotic limit of charge state distribution");
+                std::string graph_title=fTitle+" (equilibrium)";
+                fEquilibrium_solutions->SetTitle(graph_title.c_str());
 
 
                 fEquilibrium_solutions->GetXaxis()->CenterTitle();
@@ -403,18 +425,33 @@ namespace bear
                 fEquilibrium_solutions->GetYaxis()->SetTitle("Fractions");
 
                 fEquilibrium_solutions->Draw("ALP");
+                std::string graph_legend("#splitline{Equilibrium charge}{state distribution}");
+                
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                fLegend_eq->AddEntry(fEquilibrium_solutions.get(),graph_legend.c_str(),"lp");
+                
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                graph_legend="<q> = "+std::to_string(mean);
+                fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
+
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                graph_legend="#sigma = "+std::to_string(sigma);
+                fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
+                fLegend_eq->AddEntry((TObject*)0,"","");
+                
                 for(const auto& p : fSummary->equilibrium_solutions)
                 {
                     double Fi=p.second;
                     double qi=fSummary->F_index_map.at(p.first);
                     //mean+=qi*Fi;
                     //sum+=Fi;
-                    LOG(DEBUG)  << "dim = "<< dim << " F"
+                    LOG(DEBUG)    << "mean = "<< mean << " F"
                                   << std::to_string(fSummary->F_index_map.at(p.first))
                                   << " = "
                                   << Fi;
                 }
 
+                fLegend_eq->Draw();
 
                 if(fSave_e)
                 {
@@ -441,6 +478,7 @@ namespace bear
         std::shared_ptr<TCanvas> fCanvas_non_equilib;
         std::shared_ptr<TCanvas> fCanvas_equilib;
         std::shared_ptr<TLegend> fLegend;
+        std::shared_ptr<TLegend> fLegend_eq;
         std::shared_ptr<TGraph>  fEquilibrium_solutions;
         //TF1 *fa1;
         std::map<std::size_t, std::string> fInput;
