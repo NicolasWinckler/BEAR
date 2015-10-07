@@ -175,8 +175,10 @@ namespace bear
             {
                 os_title<< std::setw(16)
                         //<<std::left
-                        << bstream_centered("F"+std::to_string( p.first + 1)) << "    ";
+                        << bstream_centered("F"+std::to_string( fSummary->F_index_map.at(p.first) )) << "    ";
             }
+
+
             os_title<<std::setw(16)
                     //<<std::left
                     <<bstream_centered("Sum");
