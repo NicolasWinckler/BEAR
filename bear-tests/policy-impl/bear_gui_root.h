@@ -227,13 +227,20 @@ namespace bear
             fMethod=kDiagonalization;
             //fCanvas_non_equilib = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
             
-            
+            int color=1;
             for(const auto& p : input_functions)
             {
                 std::string name = "F" + std::to_string(fSummary->F_index_map.at(p.first));
                 fFunctions[p.first] = std::make_shared<TF1>(name.c_str(), p.second.c_str(), fXmin, fXmax);
                 fFunctions.at(p.first)->SetNpx(fNpoint);
-                fFunctions.at(p.first)->SetLineColor(p.first+1);
+                int color =p.first;
+                if(color == 0 || color == 10)
+                    color++;
+
+                if(color==50)
+                    color=1;
+
+                fFunctions.at(p.first)->SetLineColor(color);
                 #ifdef __CINT__
                 fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst); // deprecated in root 6
                 #endif
@@ -303,12 +310,11 @@ namespace bear
             fSingal_handler.set_canvas(fCanvas_non_equilib.get());
 
             fCanvas_non_equilib->SetLogx();
+
+            // need two loops for draw and draw same
             for(auto& p : container_map)
             {
-                
-                if(p.first!=fSummary->max_fraction_index)
-                    p.second->Draw("SAME");
-                else
+                if(p.first==fSummary->max_fraction_index)
                 {
                     p.second->SetTitle(fTitle.c_str());
                     p.second->GetYaxis()->SetRangeUser(fYmin,fYmax);
@@ -326,6 +332,13 @@ namespace bear
                     p.second->Draw();
                 }
             }
+
+            for(auto& p : container_map)
+            {
+                if(p.first!=fSummary->max_fraction_index)
+                    p.second->Draw("SAME");
+            }
+
 
             //fCanvas_non_equilib->SetLogx();
             fLegend->Draw();
