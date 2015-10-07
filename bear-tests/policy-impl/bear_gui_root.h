@@ -56,7 +56,7 @@ namespace bear
                             fYTitle(),
                             fNpoint(1000),
                             fSummary(nullptr),
-                            fHistograms(nullptr),
+                            fHistograms(),
                             fMaxop(100000),
                             fMaxpar(100000),
                             fMaxconst(100000),
