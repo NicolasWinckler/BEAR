@@ -57,9 +57,12 @@ class bear_summary
                         F_index_map(), 
                         approximated_solutions(), 
                         equilibrium_solutions(), 
-                        analytical_solutions(),max_fraction_index(0),
+                        distance_to_equilibrium(),
+                        analytical_solutions(),
+                        max_fraction_index(0),
                         system_dim(0), 
-                        reduced_system_dim(0) , offset(0)
+                        reduced_system_dim(0) , 
+                        offset(0)
     {}
     virtual ~bear_summary (){}
 
@@ -71,6 +74,7 @@ class bear_summary
 
     std::map<size_t,double> approximated_solutions;// matrix index -> Fi values
     std::map<size_t,double> equilibrium_solutions;// matrix index -> Fi values
+    std::map<size_t,double> distance_to_equilibrium;
     std::map<size_t,std::string> analytical_solutions;
     
     size_t max_fraction_index;

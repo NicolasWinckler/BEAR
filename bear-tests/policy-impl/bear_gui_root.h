@@ -165,11 +165,28 @@ namespace bear
         
         int compute_equilibrium_distance()
         {
-            double epsilon=0.0001;
+            double epsilon=0.001;
             double x=0;
-            for(auto& p : fFunctions)
+            double N=(double)fNpoint;
+            double step =(fXmax-fXmin)/N;
+            for(int i(fNpoint-1);i>=0;i--)
             {
-                double val=p.second->Derivative(x,nullptr,epsilon);
+                double idoub = (double)i;
+                double x=idoub*step+fXmin;
+                for(auto& p : fFunctions)
+                {
+                    double val=p.second->Eval(x);
+                    double val_eq=fSummary->equilibrium_solutions.at(p.first);
+                    double rel_dev=(val_eq-val)/val_eq;
+                    if(std::fabs(rel_dev)>epsilon)
+                        if(!fSummary->distance_to_equilibrium.count(p.first))
+                        {
+
+                            if(fNpoint-1==i)
+                                LOG(WARN)<<"Distance to equilibrium located at the end of the defined range. Increase range";
+                            fSummary->distance_to_equilibrium[p.first]=x;
+                        }
+                }
             }
             //for(const auto& p : fSummary->equilibrium_solutions)
             return 0;
