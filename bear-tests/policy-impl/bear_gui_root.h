@@ -455,7 +455,7 @@ namespace bear
                 fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
 
                 fLegend_eq->AddEntry((TObject*)0," ","");
-                graph_legend="#sigma = "+std::to_string(sigma);
+                graph_legend="  #sigma   = "+std::to_string(sigma);
                 fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
                 fLegend_eq->AddEntry((TObject*)0," ","");
                 
