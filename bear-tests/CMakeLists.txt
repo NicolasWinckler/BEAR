@@ -3,24 +3,20 @@
 set(SCRIPT_CMD1 "\${filename##*.}")
 set(SCRIPT_CMD2 "\${filename%.*}")
 
-configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/solveSteadyEq.sh.in ${CMAKE_BINARY_DIR}/bin/solveSteadyEq.sh )
-configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/solveDynamicEq.sh.in ${CMAKE_BINARY_DIR}/bin/solveDynamicEq.sh )
-configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/config/bear-config-steady.cfg.in ${CMAKE_SOURCE_DIR}/data/config/bear-config-steady.cfg )
-configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/solveDynamicEqRootAll.sh.in ${CMAKE_BINARY_DIR}/bin/solveDynamicEqRootAll.sh)
-
-
 configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/bear-eq.sh.in ${CMAKE_BINARY_DIR}/bin/bear-eq.sh )
 configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/bear-plot.sh.in ${CMAKE_BINARY_DIR}/bin/bear-plot.sh )
+configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/macro/bear-web.sh.in ${CMAKE_BINARY_DIR}/bin/bear-web.sh )
+
 configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/config/bear-config-save-to-file.cfg.in ${CMAKE_SOURCE_DIR}/data/config/bear-config-save-to-file.cfg )
+
 configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/config/bear-config-no-save-to-file.cfg.in ${CMAKE_SOURCE_DIR}/data/config/bear-config-no-save-to-file.cfg )
 
+configure_file( ${CMAKE_SOURCE_DIR}/bear-tests/config/bear-config-webbear.cfg.in ${CMAKE_SOURCE_DIR}/data/config/bear-config-webbear.cfg )
 
 EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/bear-eq.sh")
 EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/bear-plot.sh")
+EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/bear-web.sh")
 
-EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/solveSteadyEq.sh")
-EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/solveDynamicEq.sh")
-EXEC_PROGRAM(/bin/chmod ARGS "u+x  ${CMAKE_BINARY_DIR}/bin/solveDynamicEqRootAll.sh")
 
 set(INCLUDE_DIRECTORIES
 ${CMAKE_SOURCE_DIR}/bear-utils/src
@@ -63,15 +59,6 @@ if(LAPACK_FOUND)
   Set(EXE_NAME runSolveSteadyEqLapack)
   Set(SRCS 
     run/runSolveSystemAtEquilibriumLapack.cxx
-  )
-  #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
-  #set(LIBS_MAP_LAPACK "LAPACK")
-  Set(DEPENDENCIES bear_utils blas lapack gfortran ${LAPACK_LIBRARIES})
-  GENERATE_EXECUTABLE()
-
-  Set(EXE_NAME rundiagoTest)
-  Set(SRCS 
-    run/test_diagonalization.cxx
   )
   #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
   #set(LIBS_MAP_LAPACK "LAPACK")

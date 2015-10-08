@@ -145,7 +145,7 @@ namespace bear
             
             INIT_LOG_FILE_FILTER("bear.log",GREATER_EQ_THAN,DEBUG);
             
-            fSummary->filename=input.filename().string();;
+            fSummary->filename=input.filename().string();
             fSummary->outfilename=output;
 
             print_options();
@@ -196,13 +196,16 @@ namespace bear
                                                             "it will write the solutions of the equation system with provided input file name as suffix")
                 ("plot",                po::value<bool>()->zero_tokens()->default_value(false),                   "plot ")
                 ("print",               po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
-                ("save-table",         po::value<bool>()->zero_tokens()->default_value(false),                   "print table to file")
-                ("save-approximation", po::value<bool>()->zero_tokens()->default_value(false),                   "print approximation to file")
-                ("save-equilibrium",   po::value<bool>()->zero_tokens()->default_value(false),                   "print equilibrium solution to file")
-                ("save-analytic",      po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
-                ("save",                po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
-                ("save-fig-e",          po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
-                ("save-fig-ne",         po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("save-table",          po::value<bool>()->zero_tokens()->default_value(false),                   "print table to file")
+                ("save-approximation",  po::value<bool>()->zero_tokens()->default_value(false),                   "print approximation to file")
+                ("save-equilibrium",    po::value<bool>()->zero_tokens()->default_value(false),                   "print equilibrium solution to file")
+                ("save-analytic",       po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
+                ("save",                po::value<bool>()->zero_tokens()->default_value(false),                   "save results (required for other save options)")
+                ("save-fig-e",          po::value<bool>()->zero_tokens()->default_value(false),                   "save equilibrium figure to pdf file")
+                ("save-fig-ne",         po::value<bool>()->zero_tokens()->default_value(false),                   "save non-equilibrium figure to pdf file")
+                ("save-root-e",         po::value<bool>()->zero_tokens()->default_value(false),                   "save equilibrium figure to root file")
+                ("save-root-ne",        po::value<bool>()->zero_tokens()->default_value(false),                   "save non-equilibrium figure to root file")
+                
                 //("save-fig-ne-root", po::value<bool>()->zero_tokens()->default_value(false),                   "print analytic solution to file")
             
             ;

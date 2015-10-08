@@ -66,7 +66,9 @@ namespace bear
                             fCharge(nullptr),
                             fFraction(nullptr),
                             fSave_ne(false),
-                            fSave_e(false)
+                            fSave_e(false),
+                            fSave_root_ne(false),
+                            fSave_root_e(false)
         {
         }
         virtual ~bear_gui_root()
@@ -147,6 +149,9 @@ namespace bear
             
             fSave_ne=vm2["save-fig-ne"].template as<bool>();
             fSave_e=vm2["save-fig-e"].template as<bool>();
+
+            fSave_root_ne=vm2["save-root-ne"].template as<bool>();
+            fSave_root_e=vm2["save-root-e"].template as<bool>();
             return 0;
         }
 
@@ -356,9 +361,15 @@ namespace bear
                 LOG(STATE)<<"saving to figure ...";
                 LOG(INFO)<<"- saving figure of non-equilibrium solutions to : ";//<<fOut_fig_filename;
                 save_fig(fOut_fig_filename+".pdf");
-                save_fig(fOut_fig_filename+".root");
-                LOG(INFO)<<" ";
+                
+                
             }
+
+            if(fSave_root_ne)
+                save_fig(fOut_fig_filename+".root");
+
+            if(fSave_ne)
+                LOG(INFO)<<" ";
 
 
             bool plot_eq=true;
@@ -436,21 +447,22 @@ namespace bear
 
                 fEquilibrium_solutions->Draw("ALP");
                 std::string graph_legend("#splitline{Equilibrium charge}{state distribution}");
-                
-                fLegend_eq->AddEntry((TObject*)0,"","");
+                fLegend_eq->AddEntry((TObject*)0," ","");
                 fLegend_eq->AddEntry(fEquilibrium_solutions.get(),graph_legend.c_str(),"lp");
                 
-                fLegend_eq->AddEntry((TObject*)0,"","");
+                fLegend_eq->AddEntry((TObject*)0," ","");
                 graph_legend="<q> = "+std::to_string(mean);
                 fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
 
-                fLegend_eq->AddEntry((TObject*)0,"","");
+                fLegend_eq->AddEntry((TObject*)0," ","");
                 graph_legend="#sigma = "+std::to_string(sigma);
                 fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
-                fLegend_eq->AddEntry((TObject*)0,"","");
+                fLegend_eq->AddEntry((TObject*)0," ","");
                 
                 fLegend_eq->Draw();
                 fCanvas_equilib->Update();
+
+
 
                 if(fSave_e)
                 {
@@ -463,11 +475,18 @@ namespace bear
 
                     LOG(INFO)<<"- saving figure of equilibrium solutions to : ";//<<fOut_fig_e_filename;
                     save_fig_equilibrium(fOut_fig_e_filename+".pdf");
-                    save_fig_equilibrium(fOut_fig_e_filename+".root");
-                    LOG(INFO)<<" ";
+                    
+                    
                 }
 
-                
+                if(fSave_root_e)
+                    save_fig_equilibrium(fOut_fig_e_filename+".root");
+
+                if(fSave_e)
+                    LOG(INFO)<<" ";
+
+
+
                 fCanvas_equilib->Update();
             }
 
@@ -510,6 +529,8 @@ namespace bear
         double* fFraction;   // for equilibrium solution 
         bool fSave_ne;
         bool fSave_e;
+        bool fSave_root_ne;
+        bool fSave_root_e;
         // 
     };
 }
