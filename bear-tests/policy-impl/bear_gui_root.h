@@ -166,7 +166,7 @@ namespace bear
             {
                 double val=p.second->Derivative(x,nullptr,epsilon);
             }
-                
+            //for(const auto& p : fSummary->equilibrium_solutions)
             return 0;
         }
         
@@ -233,20 +233,20 @@ namespace bear
             fMethod=kDiagonalization;
             //fCanvas_non_equilib = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
             
-            int color=1;
+            int tf1color=1;
             for(const auto& p : input_functions)
             {
                 std::string name = "F" + std::to_string(fSummary->F_index_map.at(p.first));
                 fFunctions[p.first] = std::make_shared<TF1>(name.c_str(), p.second.c_str(), fXmin, fXmax);
                 fFunctions.at(p.first)->SetNpx(fNpoint);
-                int color =p.first;
-                if(color == 0 || color == 10)
-                    color++;
+                tf1color =p.first;
+                if(tf1color == 0 || tf1color == 10)
+                    tf1color++;
 
-                if(color==50)
-                    color=1;
+                if(tf1color==50)
+                    tf1color=1;
 
-                fFunctions.at(p.first)->SetLineColor(color);
+                fFunctions.at(p.first)->SetLineColor(tf1color);
                 #ifdef __CINT__
                 fFunctions.at(p.first)->SetMaxima(fMaxop,fMaxpar,fMaxconst); // deprecated in root 6
                 #endif
@@ -388,37 +388,26 @@ namespace bear
                 double charge_end;
                 double mean=0.;
                 double sum=0.;
-                for(const auto& p : fSummary->equilibrium_solutions)
-                {
-                    double Fi=p.second;
-                    double qi=fSummary->F_index_map.at(p.first);
-
-
-                    fCharge[i]=qi;
-                    fFraction[i]=Fi;
-                    mean+=qi*Fi;
-                    i++;
-                    //mean+=qi*Fi;
-                    sum+=Fi;
-                    //LOG(ERROR)  << "F"
-                    //              << std::to_string(fSummary->F_index_map.at(p.first))
-                    //              << " = "
-                    //              << Fi;
-                }
-
                 double variance=0.;
                 for(const auto& p : fSummary->equilibrium_solutions)
                 {
                     double Fi=p.second;
                     double qi=fSummary->F_index_map.at(p.first);
                     double temp=(qi-mean);
-                    int N=static_cast<int>(dim);
-                    variance+=temp*temp/N;
+                    variance+=temp*temp*Fi;
+
+                    fCharge[i]=qi;
+                    fFraction[i]=Fi;
+                    mean+=qi*Fi;
+                    i++;
+                    sum+=Fi;
                 }
 
+
                 double sigma=std::sqrt(variance);
-
-
+                LOG(DEBUG)<<"mean = "<<mean;
+                LOG(DEBUG)<<"variance = "<<variance;
+                LOG(DEBUG)<<"standard deviation = "<<sigma;
                 charge_start=fCharge[0]-1;
                 charge_end=fCharge[dim-1]+1;
 
@@ -460,19 +449,8 @@ namespace bear
                 fLegend_eq->AddEntry((TObject*)0,graph_legend.c_str(),"");
                 fLegend_eq->AddEntry((TObject*)0,"","");
                 
-                for(const auto& p : fSummary->equilibrium_solutions)
-                {
-                    double Fi=p.second;
-                    double qi=fSummary->F_index_map.at(p.first);
-                    //mean+=qi*Fi;
-                    //sum+=Fi;
-                    LOG(DEBUG)    << "mean = "<< mean << " F"
-                                  << std::to_string(fSummary->F_index_map.at(p.first))
-                                  << " = "
-                                  << Fi;
-                }
-
                 fLegend_eq->Draw();
+                fCanvas_equilib->Update();
 
                 if(fSave_e)
                 {
@@ -484,10 +462,13 @@ namespace bear
                     }
 
                     LOG(INFO)<<"- saving figure of equilibrium solutions to : ";//<<fOut_fig_e_filename;
-                    save_fig(fOut_fig_e_filename+".pdf");
-                    save_fig(fOut_fig_e_filename+".root");
+                    save_fig_equilibrium(fOut_fig_e_filename+".pdf");
+                    save_fig_equilibrium(fOut_fig_e_filename+".root");
                     LOG(INFO)<<" ";
                 }
+
+                
+                fCanvas_equilib->Update();
             }
 
 
