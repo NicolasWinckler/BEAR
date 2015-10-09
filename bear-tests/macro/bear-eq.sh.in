@@ -9,6 +9,12 @@ fi
 SOLVE_EQ="runSolveDynEqRoot$opt"
 SOLVE_EQ+=" --config @CMAKE_SOURCE_DIR@/data/config/bear-config-save-to-file.cfg"
 
+if [ -z "$BEARoutput" ]; then
+	echo "BEARoutput environment variable not set. Output directory is the default one."
+else
+	SOLVE_EQ+=" --output-directory $BEARoutput"
+fi  
+
 @CMAKE_BINARY_DIR@/bin/$SOLVE_EQ 
 
 
