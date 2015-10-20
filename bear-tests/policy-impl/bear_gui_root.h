@@ -384,8 +384,8 @@ namespace bear
             if(plot_eq)
             {
                 std::size_t dim=fSummary->equilibrium_solutions.size(); 
-                const Int_t max_dim=15;
-                Double_t x[max_dim], y[max_dim];
+                const Int_t max_dim=200;
+
                 fCharge = new double[dim];
                 fFraction = new double[dim];
 
