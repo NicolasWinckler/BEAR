@@ -254,7 +254,8 @@ namespace bear
             
             fMethod=kDiagonalization;
             //fCanvas_non_equilib = std::make_shared<TCanvas>("c1Dia","Solutions - Diagonalization",800,600);
-            
+            fDummyHist = std::make_shared<TH1D>("hist","hist",100, fXmin, fXmax);
+            fDummyHist->SetStats(kFALSE);
             int tf1color=1;
             for(const auto& p : input_functions)
             {
@@ -339,34 +340,24 @@ namespace bear
 
             fCanvas_non_equilib->SetLogx();
 
-            // need two loops for draw and draw same
-            for(auto& p : container_map)
-            {
-                if(p.first==fSummary->max_fraction_index)
-                {
-                    p.second->SetTitle(fTitle.c_str());
-                    p.second->GetYaxis()->SetRangeUser(fYmin,fYmax);
-                    
-                    
-                    p.second->GetXaxis()->CenterTitle();
-                    p.second->GetYaxis()->CenterTitle();
-                    
-                    p.second->GetXaxis()->SetTitleOffset(1.2);
-                    p.second->GetYaxis()->SetTitleOffset(1.2);
-                    
-                    p.second->GetXaxis()->SetTitle(fXTitle.c_str());
-                    p.second->GetYaxis()->SetTitle(fYTitle.c_str());
-                    
-                    p.second->Draw();
-                }
-            }
+            
+            fDummyHist->SetTitle(fTitle.c_str());
+            fDummyHist->GetYaxis()->SetRangeUser(fYmin,fYmax);
+            fDummyHist->GetXaxis()->CenterTitle();
+            fDummyHist->GetYaxis()->CenterTitle();
+            
+            fDummyHist->GetXaxis()->SetTitleOffset(1.2);
+            fDummyHist->GetYaxis()->SetTitleOffset(1.2);
+            
+            fDummyHist->GetXaxis()->SetTitle(fXTitle.c_str());
+            fDummyHist->GetYaxis()->SetTitle(fYTitle.c_str());
+            
+            fDummyHist->Draw();
+
 
             for(auto& p : container_map)
-            {
-                if(p.first!=fSummary->max_fraction_index)
                     p.second->Draw("SAME");
-            }
-
+            
 
             //fCanvas_non_equilib->SetLogx();
             fLegend->Draw();
@@ -518,6 +509,7 @@ namespace bear
         std::shared_ptr<TLegend> fLegend;
         std::shared_ptr<TLegend> fLegend_eq;
         std::shared_ptr<TGraph>  fEquilibrium_solutions;
+        std::shared_ptr<TH1D>     fDummyHist;
         //TF1 *fa1;
         std::map<std::size_t, std::string> fInput;
         //std::map<std::size_t, TF1*> fFunctions;
