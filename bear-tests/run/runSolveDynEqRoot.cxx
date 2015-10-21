@@ -43,7 +43,10 @@ int main(int argc, char** argv)
         
         bool plot = man.get_varMap()["plot"].as<bool>();
         bool save = man.get_varMap()["save"].as<bool>();
-        bool save_fig = man.get_varMap()["save-fig-ne"].as<bool>();
+        bool save_fig_ne = man.get_varMap()["save-fig-ne"].as<bool>();
+        bool save_fig_e = man.get_varMap()["save-fig-e"].as<bool>();
+        bool save_root_ne = man.get_varMap()["save-root-ne"].as<bool>();
+        bool save_root_e = man.get_varMap()["save-root-e"].as<bool>();
         /// /////////////////////////////////////////////////////
         // INIT EQUATIONS
         LOG(INFO)<<" ";
@@ -85,7 +88,7 @@ int main(int argc, char** argv)
         }
         else
         {
-            if(save_fig)
+            if(save_fig_ne || save_fig_e || save_root_ne || save_root_e)
             {
                 
                 if(man.plot()) 

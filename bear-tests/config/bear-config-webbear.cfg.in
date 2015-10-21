@@ -6,12 +6,12 @@
 plot = false
 save = true
 save-equilibrium = true
-save-analytic = true
-save-approximation = true
-save-table = true
+save-analytic = false
+save-approximation = false
+save-table = false
 
-save-fig-e = true
-save-fig-ne = true
+save-fig-e = false
+save-fig-ne = false
 
 save-root-e = true
 save-root-ne = true
